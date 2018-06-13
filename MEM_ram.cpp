@@ -660,7 +660,7 @@ void *JGT_realloc(void *ptr, size_t size,  const  char  *filename,  int  line) {
 //  ---------------------------------------------------------------------------------------------------------------------------------
 //  Used  by  the  macros
 //  ---------------------------------------------------------------------------------------------------------------------------------
-#define MAX_STACKED_FILES		10
+#define MAX_STACKED_FILES		512
 
 char	        m_stackedSourceFile[MAX_STACKED_FILES][100]               =  {"??"};
 int	        	m_stackedSourceLine[MAX_STACKED_FILES]               =  {0};
