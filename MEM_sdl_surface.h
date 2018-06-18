@@ -23,27 +23,7 @@
  */
 
 
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	#define RMASK32 0xff000000
-	#define GMASK32 0x00ff0000
-	#define BMASK32 0x0000ff00
-	#define AMASK32 0x000000ff
 
-	#define RMASK16 0xf100
-	#define GMASK16 0x03e0
-	#define BMASK16 0x001f
-	#define AMASK16 0x0000
-#else // little indian
-	#define RMASK32 0x000000ff
-	#define GMASK32 0x0000ff00
-	#define BMASK32 0x00ff0000
-	#define AMASK32 0xff000000
-
-	#define RMASK16 0xf100
-	#define GMASK16 0x03e0
-	#define BMASK16 0x001f
-	#define AMASK16 0x0000
-#endif
 
 
 
@@ -62,7 +42,7 @@ void SDL_html2rgb(Uint32 html, SDL_Color & c);
 
 
 //  All  sdl  memory/sdl_image/sdl_gfx/sdl_ttf  etc...
-void SDL_flipY(SDL_Surface *surface);
+
 
 
 #if defined(__DEBUG__) && defined(__MEMMANAGER__)

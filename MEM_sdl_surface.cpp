@@ -15,24 +15,7 @@ void SDL_html2rgb(Uint32 html, SDL_Color & c){
 }
 
 //circle_color( $surface, $x, $y, $r, $color );
-void SDL_flipY(SDL_Surface *surface){
-	int size_scanline = surface->w*surface->format->BytesPerPixel;
-	Uint8 *src_up   = (Uint8 *)surface->pixels;
-	Uint8 *src_down = ((Uint8 *)surface->pixels+(surface->h-1)*size_scanline);
-	Uint8 * aux_scanline = (Uint8 *)malloc(size_scanline);
-	for(int y = 0; y < surface->h/2; y++){
 
-		memcpy(aux_scanline, src_up	  		,size_scanline);
-		memcpy(src_up		, src_down		,size_scanline);
-		memcpy(src_down		, aux_scanline	,size_scanline);
-
-		src_up	+=size_scanline;
-		src_down-=size_scanline;
-
-	}
-
-	free(aux_scanline);
-}
 
 #if defined(__DEBUG__) && defined(__MEMMANAGER__)
 
