@@ -113,60 +113,23 @@
 	static int registered_line[MAX_REGISTER_FILELINES]={-1};
 	static int n_registered_file_line=0;
 
-	static 	std::mutex alloc_dealloc_mutex;
+	static 	std::mutex mutex_main;
+	static 	std::mutex mutex_main_realloc;
+	static 	std::mutex mutex_file_line;
+	/*static 	std::mutex malloc_mutex;
+	static 	std::mutex free_mutex;
+	static 	std::mutex free_from_malloc_mutex;
+	static 	std::mutex realloc_mutex;
+	static 	std::mutex pre_new_delete_mutex;
+	static 	std::mutex new_delete_mutex;*/
+
 
 	//--------------------------------------------------------------------------------------------
 	void  MEMMGR_print_status(void);
 	void  MEMMGR_free_all_allocated_pointers( );
 
 	//--------------------------------------------------------------------------------------------
-	// DICOTOMIC
-	int MEMMGR_search_index_to_insert(PointerDS_Element *array, size_t size, void * key)
-	{
-		// PRE: array is already ordered
-		int idx_min = 0, idx_max = size - 1;
-
-		if (key <= array[idx_max].pointer){
-		  idx_min=size;
-		}
-		else{
-		  while (idx_max > idx_min) {
-			int idx_mid = (idx_min + idx_max) >> 1;
-			if (array[idx_mid].pointer > key) {
-				idx_max = idx_mid;
-			}
-			else{
-				idx_min = idx_mid + 1;
-			}
-		  }
-		}
-
-		return idx_min;
-	}
-
-	int MEMMGR_dicotomic_search(PointerDS_Element * array, void * key, int idx_min, int idx_max)
-	{
-		// continue searching while [imin,imax] is not empty
-		while (idx_max >= idx_min)
-		{
-			// calculate the midpoint for roughly equal partition
-			int idx_mid = (idx_min + idx_max ) >> 1;
-			if(array[idx_mid].pointer == key){
-				// key found at index idx_mid
-				return idx_mid;
-			// determine which subarray to search
-			}else if (array[idx_mid].pointer < key){
-				// change min index to search upper subarray
-				idx_min = idx_mid + 1;
-			}else{
-				// change max index to search lower subarray
-				idx_max = idx_mid - 1;
-			}
-	    }
-		// key was not found
-		return KEY_NOT_FOUND;
-	}
-	//--------------------------------------------------------------------------------------------
+	// PATH UTILS
 	void  MEMMGR_get_filename(char  *filename, const char *absolute_filename)
 	{
 		const  char  *to_down_ptr;
@@ -206,6 +169,8 @@
 		fprintf(std_type, "%s", command);
 	}
 
+	//--------------------------------------------------------------------------------------------
+	// LOG UTILS
 	#ifndef  __GNUC__
 	#pragma  managed(push,  off)
 	#endif
@@ -241,6 +206,94 @@
 	#pragma  managed(pop)
 	#endif
 
+	//--------------------------------------------------------------------------------------------
+	// DICOTOMIC
+
+	int MEMMGR_dicotomic_search(void * key)
+	{
+		int idx_min=0;
+		int idx_max=n_allocated_pointers-1;
+		// continue searching while [imin,imax] is not empty
+		while (idx_max >= idx_min)
+		{
+			// calculate the midpoint for roughly equal partition
+			int idx_mid = (idx_min + idx_max ) >> 1;
+			if(ds_pointer_array[idx_mid].pointer == key){
+				// key found at index idx_mid
+				return idx_mid;
+			// determine which subarray to search
+			}else if (ds_pointer_array[idx_mid].pointer < key){
+				// change min index to search upper subarray
+				idx_min = idx_mid + 1;
+			}else{
+				// change max index to search lower subarray
+				idx_max = idx_mid - 1;
+			}
+	    }
+		// key was not found
+		return KEY_NOT_FOUND;
+	}
+
+	bool MEMMGR_dicotomic_insert(void * key, int index)
+	{
+		if(n_allocated_pointers==MAX_MEMPOINTERS){ // array full
+			LOG_ERROR("DS Error full table");
+			return false;
+		}
+
+		// PRE: array is already ordered
+		int size=n_allocated_pointers - 1;
+		int idx_min = 0, idx_max = size;
+
+		if (key <= ds_pointer_array[idx_max].pointer){
+		  idx_min=size;
+		}
+		else{
+		  while (idx_max > idx_min) {
+			int idx_mid = (idx_min + idx_max) >> 1;
+			if (ds_pointer_array[idx_mid].pointer > key) {
+				idx_max = idx_mid;
+			}
+			else{
+				idx_min = idx_mid + 1;
+			}
+		  }
+		}
+
+		if(idx_min >= 0){
+			for (int i = n_allocated_pointers-1; i >= idx_min; --i){
+				ds_pointer_array[i+1] = ds_pointer_array[i];
+			}
+			ds_pointer_array[idx_min].pointer = key;
+			ds_pointer_array[idx_min].index = index;
+			return true;
+		}
+		return false;
+	}
+
+	bool MEMMGR_dicotomic_delete(void * key)
+	{
+		if(n_allocated_pointers==0){
+			LOG_ERROR("DS Error empty table");
+			return false;
+		}
+
+		int pos=MEMMGR_dicotomic_search(key);
+		//printf("(pos:%i)",pos);
+		if(pos != KEY_NOT_FOUND){
+			//memcpy(&ds_pointer_array[pos],&ds_pointer_array[pos+1],(n_allocated_pointers-pos)*sizeof(PointerDS_Element));
+			for (int i = pos; i < n_allocated_pointers; i++){
+				ds_pointer_array[i] = ds_pointer_array[i+1];
+			}
+			ds_pointer_array[n_allocated_pointers-1].pointer=0;
+			ds_pointer_array[n_allocated_pointers-1].index=0;
+			return true;
+		}
+		return false;
+
+	}
+	//--------------------------------------------------------------------------------------------
+	// MEMMGR Functions
 	void  MEMMGR_init()
 	{
 
@@ -269,7 +322,9 @@
 
 	bool  MEMMGR_is_pointer_registered(void *pointer)
 	{
-		int pos = MEMMGR_dicotomic_search(ds_pointer_array,pointer, 0, n_allocated_pointers);
+		std::lock_guard<std::mutex> lg(mutex_main);
+
+		int pos = MEMMGR_dicotomic_search(pointer);
 
 		if(pos >=0){
 			if(ds_pointer_array[pos].pointer == pointer)
@@ -288,11 +343,10 @@
 	}
 
 	//--------------------------------------------------------------------------------------------
-	void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line, bool already_performed_mutex)
+	void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line)
 	{
-		if(!already_performed_mutex){
-			alloc_dealloc_mutex.lock();
-		}
+
+		std::lock_guard<std::mutex> lg(mutex_main);
 
 		PointerPreHeapInfo  *heap_allocat  =  NULL;
 		std::atomic<void  *> pointer(NULL);
@@ -329,14 +383,7 @@
 
 			//------------------------------------------------------------
 			// insert to get pointer faster through dicotomic search...
-			int pos=MEMMGR_search_index_to_insert(ds_pointer_array,n_allocated_pointers,pointer);
-			if(pos >= 0){
-				for (int i = n_allocated_pointers-1; i >= pos; --i){
-					ds_pointer_array[i+1] = ds_pointer_array[i];
-				}
-				ds_pointer_array[pos].pointer = heap_allocat;
-				ds_pointer_array[pos].index = index;
-			}
+			MEMMGR_dicotomic_insert(heap_allocat, index);
 			//------------------------------------------------------------
 
 			n_free_pointers--;
@@ -347,15 +394,17 @@
 			LOG_ERROR("Table full of pointers or not enought memory");
 		}
 
-		if(!already_performed_mutex){
-			alloc_dealloc_mutex.unlock();
-		}
+
+		//malloc_mutex.unlock();
+
 
 		return pointer;
 	}
 	//--------------------------------------------------------------------------------------------
 	void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	{
+
+		std::lock_guard<std::mutex> lg(mutex_main);
 
 		PointerPreHeapInfo    *preheap_allocat    =  NULL;
 		PointerPostHeapInfo  *postheap_allocat  =  NULL;
@@ -391,10 +440,7 @@
 
 					//-----------------------------------------------------------------
 					// DS delete element ...
-					int pos = MEMMGR_dicotomic_search(ds_pointer_array,base_pointer, 0, n_allocated_pointers);
-					if(pos >= 0){
-						memcpy(&ds_pointer_array[pos],&ds_pointer_array[pos+1],(n_allocated_pointers-pos)*sizeof(PointerDS_Element));
-					}
+					MEMMGR_dicotomic_delete(base_pointer);
 					//----------------------------------------------
 
 					n_allocated_bytes-=preheap_allocat->size;
@@ -420,13 +466,11 @@
 
 	void *MEMMGR_realloc(void *ptr, size_t size,  const  char  *absolute_filename,  int  line) {
 
-
-		alloc_dealloc_mutex.lock();
-
+		std::lock_guard<std::mutex> lg(mutex_main_realloc);
 
 		if (ptr==NULL) {
 			// NULL ptr. realloc should act like malloc.
-			return MEMMGR_malloc(size, absolute_filename, line,true);
+			return MEMMGR_malloc(size, absolute_filename, line);
 		}
 
 		PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(ptr);
@@ -440,15 +484,13 @@
 		// Need to really realloc. Malloc new space and free old space.
 		// Then copy old data to new space.
 		std::atomic<void *>new_ptr(NULL);
-		new_ptr = MEMMGR_malloc(size, absolute_filename, line,true);
+		new_ptr = MEMMGR_malloc(size, absolute_filename, line);
 
 		if (!new_ptr) {
 			return NULL; // TODO: set errno on failure.
 		}
 		memcpy(new_ptr, ptr, pre_head->size);
 		MEMMGR_free(ptr, absolute_filename, line);
-
-		alloc_dealloc_mutex.unlock();
 
 		return new_ptr;
 	}
@@ -472,11 +514,8 @@
 	}
 
 	//----------------------------------------------------------------------------------------
-	void  MEMMGR_pre_check_and_free(void  *p,  const  char  *absolute_filename,  int  line  )
+	void  MEMMGR_free_from_malloc(void  *p,  const  char  *absolute_filename,  int  line  )
 	{
-
-		alloc_dealloc_mutex.lock();
-
 		char  filename[MAX_FILENAME_LENGTH];
 		MEMMGR_get_filename(filename,absolute_filename);
 
@@ -497,9 +536,6 @@
 		{
 			LOG_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  \"%s\"  line  %i.",filename,  line);
 		}
-
-		alloc_dealloc_mutex.unlock();
-
 	}
 	//----------------------------------------------------------------------------------------
 	void  MEMMGR_free_all_allocated_pointers()
@@ -523,9 +559,9 @@
 	bool	MEMMGR_push_file_line(const  char  *absolute_filename,   int   line)
 	{
 
-		if(n_registered_file_line==0){ // The first! can be locked!
-			alloc_dealloc_mutex.lock();
-		}
+
+		mutex_file_line.lock();
+
 
 		if(n_registered_file_line < MAX_REGISTER_FILELINES)
 		{
@@ -544,8 +580,9 @@
 
 	void*  operator  new(size_t  size)
 	{
-		const char *source_file = "??";
-		int source_line = 0;
+		const char * source_file="??";
+		int source_line=0;
+
 
 		if(n_registered_file_line > 0)
 		{
@@ -553,8 +590,11 @@
 			source_line = registered_line[n_registered_file_line-1];
 		}
 
+
 		std::atomic<void *> ret_ptr(NULL);
-		void * pointer  =  MEMMGR_malloc(size,source_file,source_line,true);
+		void *pointer = MEMMGR_malloc(size,source_file,source_line);
+
+		mutex_file_line.unlock();
 
 		if(pointer!=NULL)
 		{
@@ -562,14 +602,11 @@
 			pre_head->type_allocator  =  NEW_ALLOCATOR;
 		}
 
+		ret_ptr=pointer;
+
 		// set as not registered pointer ...
 		if(n_registered_file_line > 0){
 			n_registered_file_line--;
-		}
-
-		ret_ptr  = pointer;
-		if(n_registered_file_line == 0){ // 0 can unlock
-			alloc_dealloc_mutex.unlock();
 		}
 
 		return  ret_ptr;
@@ -578,8 +615,8 @@
 	void*  operator  new[](size_t  size)
 	{
 
-		const char *source_file = "??";
-		int source_line = 0;
+		const char * source_file="??";
+		int source_line=0;
 
 		if(n_registered_file_line > 0)
 		{
@@ -587,10 +624,14 @@
 			source_line = registered_line[n_registered_file_line-1];
 		}
 
+		mutex_file_line.unlock();
+
 		std::atomic<void *> ret_ptr(NULL);
 		void *pointer = NULL;
 
 		pointer  =  MEMMGR_malloc(size,source_file, source_line);
+
+
 		PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(pointer);
 		pre_head->type_allocator  =  NEW_WITH_BRACETS_ALLOCATOR;
 
@@ -601,24 +642,23 @@
 
 		ret_ptr=pointer;
 
-		if(n_registered_file_line == 0){ // 0 can unlock
-			alloc_dealloc_mutex.unlock();
-		}
-
 		return  ret_ptr;
 
 	}
 	//--------------------------------------------------------------------------------------------
 	void  operator  delete(void  *pointer) throw()
 	{
-		const char *source_file = "??";
-		int source_line = 0;
+
+		const char * source_file="??";
+		int source_line=0;
 
 		if(n_registered_file_line > 0)
 		{
 			source_file = registered_file[n_registered_file_line-1];
 			source_line = registered_line[n_registered_file_line-1];
 		}
+
+		mutex_file_line.unlock();
 
 		if(pointer)
 		{
@@ -654,26 +694,26 @@
 			LOG_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  \"%s\"  line  %i.",source_file,  source_line);
 		}
 
+
+
 		if(n_registered_file_line > 0){
 			n_registered_file_line--;
-		}
-
-		if(n_registered_file_line == 0){ // 0 can unlock
-			alloc_dealloc_mutex.unlock();
 		}
 
 	}
 	//--------------------------------------------------------------------------------------------
 	void  operator  delete[](void  *pointer) throw()
 	{
-		const char *source_file = "??";
-		int source_line = 0;
+		const char * source_file("??");
+		int source_line(0);
 
 		if(n_registered_file_line > 0)
 		{
 			source_file = registered_file[n_registered_file_line-1];
 			source_line = registered_line[n_registered_file_line-1];
 		}
+
+		mutex_file_line.unlock();
 
 		if(pointer!=NULL)
 		{
@@ -706,10 +746,6 @@
 			n_registered_file_line--;
 		}
 
-		if(n_registered_file_line == 0){ // 0 can unlock
-			alloc_dealloc_mutex.unlock();
-		}
-
 	}
 	#endif
 	//--------------------------------------------------------------------------------------------
@@ -738,6 +774,94 @@
 		{
 			LOG_INFO("MEMRAM:ok.");
 		}
+	}
+
+	//------------
+	// TESTS
+
+	#define N_NUM_TEST_DICOTOMIC 10
+
+	void test_dicotomic(){
+		srand(time(NULL));
+		void * ptr[N_NUM_TEST_DICOTOMIC];
+		//srand(time(0));
+		for(int i=0; i<N_NUM_TEST_DICOTOMIC; i++){
+			ptr[i]=(void *)(rand()%50 -50);
+			bool del_ptr=false;
+
+			/*if(i>0){
+				printf(",");
+			}*/
+
+			// insert...
+			n_allocated_pointers++;
+			MEMMGR_dicotomic_insert(ptr[i],0);
+			if(rand()%2==0){ // delete
+				del_ptr=true;
+			}
+
+
+			printf("i:%i%c\n",ptr[i],del_ptr?'*':' ');
+
+			for(int j=0; j<N_NUM_TEST_DICOTOMIC; j++){
+				printf("%i ",ds_pointer_array[j].pointer);
+				//printf("%lu %lu",ds_pointer_array[i].pointer,ds_pointer_array[i].index);
+			/*	if(ptr[i]!=NULL){
+					MEMMGR_free_from_malloc(ptr[i],__FILE__,__LINE__);
+				}
+
+				if(ptr_new[i]!=NULL){
+					delete [] ptr_new[i];
+				}*/
+			}
+
+			printf("\n");
+
+			if(del_ptr){ // delete
+				MEMMGR_dicotomic_delete(ptr[i]);
+				n_allocated_pointers--;
+
+				for(int j=0; j<N_NUM_TEST_DICOTOMIC; j++){
+					printf("%i ",ds_pointer_array[j].pointer);
+					//printf("%lu %lu",ds_pointer_array[i].pointer,ds_pointer_array[i].index);
+				/*	if(ptr[i]!=NULL){
+						MEMMGR_free_from_malloc(ptr[i],__FILE__,__LINE__);
+					}
+
+					if(ptr_new[i]!=NULL){
+						delete [] ptr_new[i];
+					}*/
+				}
+			}
+			else{
+				//printf("\n");
+			}
+
+			printf("\n");
+
+
+
+			printf("\n");
+
+			//int rand_num=(rand()%50)-50; // -50 to 50
+			//MEMMGR_dicotomic_insert((void *)rand_num,0);
+		}
+
+		printf("\n");
+
+		for(int i=0; i<N_NUM_TEST_DICOTOMIC; i++){
+			printf("%i %i\n",ds_pointer_array[i].pointer,ds_pointer_array[i].index);
+			//printf("%lu %lu",ds_pointer_array[i].pointer,ds_pointer_array[i].index);
+		/*	if(ptr[i]!=NULL){
+				MEMMGR_free_from_malloc(ptr[i],__FILE__,__LINE__);
+			}
+
+			if(ptr_new[i]!=NULL){
+				delete [] ptr_new[i];
+			}*/
+		}
+
+//		MEMMGR_print_status();
 	}
 
 #endif

@@ -1,5 +1,3 @@
-#define __MEMMGR__
-
 #include <thread>
 #ifdef __GNUC__
 #include <sys/stat.h>
@@ -10,10 +8,11 @@
 #endif
 
 
-#include "memmgr.cpp"
+#include "memmgr.h"
 
-#define N_TEST_THREAD 1
+#define N_TEST_THREAD 40
 #define ITERATIONS	100
+
 
 
 bool exit_thread=false;
@@ -21,25 +20,29 @@ bool exit_thread=false;
 void allocate_loop(){
 	while(!exit_thread){
 
-		int *arr_c=(int *)malloc(ITERATIONS*sizeof(int));
 		int *size_c=(int *)malloc(1*sizeof(int));
+		int *arr_c=(int *)malloc(ITERATIONS*sizeof(int));
 		*size_c=ITERATIONS;
-
-		int *arr_cpp=new int[ITERATIONS];
-		int *size_cpp=new int;
-		*size_cpp=ITERATIONS;
-
-		for(int i=0;i<*size_cpp;i++){
-			arr_cpp[i]=i;
-		}
 
 		for(int i=0;i<*size_c;i++){
 			arr_c[i]=i;
 		}
 
+		free(arr_c);
+		free(size_c);
+
+		int *size_cpp=new int;
+		*size_cpp=ITERATIONS;
+		int *arr_cpp=new int[ITERATIONS];
+
+
+		for(int i=0;i<*size_cpp;i++){
+			arr_cpp[i]=i;
+		}
+
 
 		delete [] arr_cpp;
-		free(arr_c);
+		delete size_cpp;
 
 
 		int time_ms=rand()%10+10;
@@ -53,7 +56,12 @@ void allocate_loop(){
 }
 
 
+
+
 int main(int argc, char *argv[]){
+
+	//test_dicotomic();
+	//return 0;
 
 	srand(time(NULL));
 	std::thread *thread_test[N_TEST_THREAD]={NULL};// (allocate_loop);
@@ -81,9 +89,12 @@ int main(int argc, char *argv[]){
 	for(unsigned i=0; i < N_TEST_THREAD; i++){
 		exit_thread=true;
 		thread_test[i]->join();
+		delete thread_test[i];
 	}
 
 	MEMMGR_print_status();
 
 	return 0;
 }
+
+//#include "memmgr.cpp"
