@@ -10,7 +10,7 @@
 
 #include "memmgr.h"
 
-#define N_TEST_THREAD 40
+#define N_TEST_THREAD 1000
 #define ITERATIONS	100
 
 

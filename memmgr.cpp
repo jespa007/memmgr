@@ -116,13 +116,6 @@
 	static 	std::mutex mutex_main;
 	static 	std::mutex mutex_main_realloc;
 	static 	std::mutex mutex_file_line;
-	/*static 	std::mutex malloc_mutex;
-	static 	std::mutex free_mutex;
-	static 	std::mutex free_from_malloc_mutex;
-	static 	std::mutex realloc_mutex;
-	static 	std::mutex pre_new_delete_mutex;
-	static 	std::mutex new_delete_mutex;*/
-
 
 	//--------------------------------------------------------------------------------------------
 	void  MEMMGR_print_status(void);
@@ -586,15 +579,17 @@
 
 		if(n_registered_file_line > 0)
 		{
-			source_file = registered_file[n_registered_file_line-1];
-			source_line = registered_line[n_registered_file_line-1];
+			--n_registered_file_line;
+			source_file = registered_file[n_registered_file_line];
+			source_line = registered_line[n_registered_file_line];
 		}
+
+		mutex_file_line.unlock();
 
 
 		std::atomic<void *> ret_ptr(NULL);
 		void *pointer = MEMMGR_malloc(size,source_file,source_line);
 
-		mutex_file_line.unlock();
 
 		if(pointer!=NULL)
 		{
@@ -603,11 +598,6 @@
 		}
 
 		ret_ptr=pointer;
-
-		// set as not registered pointer ...
-		if(n_registered_file_line > 0){
-			n_registered_file_line--;
-		}
 
 		return  ret_ptr;
 	}
@@ -620,8 +610,9 @@
 
 		if(n_registered_file_line > 0)
 		{
-			source_file = registered_file[n_registered_file_line-1];
-			source_line = registered_line[n_registered_file_line-1];
+			--n_registered_file_line;
+			source_file = registered_file[n_registered_file_line];
+			source_line = registered_line[n_registered_file_line];
 		}
 
 		mutex_file_line.unlock();
@@ -630,16 +621,8 @@
 		void *pointer = NULL;
 
 		pointer  =  MEMMGR_malloc(size,source_file, source_line);
-
-
 		PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(pointer);
 		pre_head->type_allocator  =  NEW_WITH_BRACETS_ALLOCATOR;
-
-		// set as not registered pointer ...
-		if(n_registered_file_line > 0){
-			n_registered_file_line--;
-		}
-
 		ret_ptr=pointer;
 
 		return  ret_ptr;
@@ -654,8 +637,9 @@
 
 		if(n_registered_file_line > 0)
 		{
-			source_file = registered_file[n_registered_file_line-1];
-			source_line = registered_line[n_registered_file_line-1];
+			--n_registered_file_line;
+			source_file = registered_file[n_registered_file_line];
+			source_line = registered_line[n_registered_file_line];
 		}
 
 		mutex_file_line.unlock();
@@ -696,9 +680,6 @@
 
 
 
-		if(n_registered_file_line > 0){
-			n_registered_file_line--;
-		}
 
 	}
 	//--------------------------------------------------------------------------------------------
@@ -709,8 +690,10 @@
 
 		if(n_registered_file_line > 0)
 		{
-			source_file = registered_file[n_registered_file_line-1];
-			source_line = registered_line[n_registered_file_line-1];
+			--n_registered_file_line;
+			source_file = registered_file[n_registered_file_line];
+			source_line = registered_line[n_registered_file_line];
+
 		}
 
 		mutex_file_line.unlock();
@@ -774,94 +757,6 @@
 		{
 			LOG_INFO("MEMRAM:ok.");
 		}
-	}
-
-	//------------
-	// TESTS
-
-	#define N_NUM_TEST_DICOTOMIC 10
-
-	void test_dicotomic(){
-		srand(time(NULL));
-		void * ptr[N_NUM_TEST_DICOTOMIC];
-		//srand(time(0));
-		for(int i=0; i<N_NUM_TEST_DICOTOMIC; i++){
-			ptr[i]=(void *)(rand()%50 -50);
-			bool del_ptr=false;
-
-			/*if(i>0){
-				printf(",");
-			}*/
-
-			// insert...
-			n_allocated_pointers++;
-			MEMMGR_dicotomic_insert(ptr[i],0);
-			if(rand()%2==0){ // delete
-				del_ptr=true;
-			}
-
-
-			printf("i:%i%c\n",ptr[i],del_ptr?'*':' ');
-
-			for(int j=0; j<N_NUM_TEST_DICOTOMIC; j++){
-				printf("%i ",ds_pointer_array[j].pointer);
-				//printf("%lu %lu",ds_pointer_array[i].pointer,ds_pointer_array[i].index);
-			/*	if(ptr[i]!=NULL){
-					MEMMGR_free_from_malloc(ptr[i],__FILE__,__LINE__);
-				}
-
-				if(ptr_new[i]!=NULL){
-					delete [] ptr_new[i];
-				}*/
-			}
-
-			printf("\n");
-
-			if(del_ptr){ // delete
-				MEMMGR_dicotomic_delete(ptr[i]);
-				n_allocated_pointers--;
-
-				for(int j=0; j<N_NUM_TEST_DICOTOMIC; j++){
-					printf("%i ",ds_pointer_array[j].pointer);
-					//printf("%lu %lu",ds_pointer_array[i].pointer,ds_pointer_array[i].index);
-				/*	if(ptr[i]!=NULL){
-						MEMMGR_free_from_malloc(ptr[i],__FILE__,__LINE__);
-					}
-
-					if(ptr_new[i]!=NULL){
-						delete [] ptr_new[i];
-					}*/
-				}
-			}
-			else{
-				//printf("\n");
-			}
-
-			printf("\n");
-
-
-
-			printf("\n");
-
-			//int rand_num=(rand()%50)-50; // -50 to 50
-			//MEMMGR_dicotomic_insert((void *)rand_num,0);
-		}
-
-		printf("\n");
-
-		for(int i=0; i<N_NUM_TEST_DICOTOMIC; i++){
-			printf("%i %i\n",ds_pointer_array[i].pointer,ds_pointer_array[i].index);
-			//printf("%lu %lu",ds_pointer_array[i].pointer,ds_pointer_array[i].index);
-		/*	if(ptr[i]!=NULL){
-				MEMMGR_free_from_malloc(ptr[i],__FILE__,__LINE__);
-			}
-
-			if(ptr_new[i]!=NULL){
-				delete [] ptr_new[i];
-			}*/
-		}
-
-//		MEMMGR_print_status();
 	}
 
 #endif
