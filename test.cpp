@@ -1,4 +1,8 @@
 #include <thread>
+#ifdef __WIN32__
+#include <synchapi.h>
+#endif
+
 #ifdef __GNUC__
 #include <sys/stat.h>
 #include <dirent.h>
@@ -10,7 +14,7 @@
 
 #include "memmgr.h"
 
-#define N_TEST_THREAD 1000
+#define N_TEST_THREAD 100
 #define ITERATIONS	100
 
 
