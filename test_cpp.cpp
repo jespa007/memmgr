@@ -1,4 +1,3 @@
-#include <thread>
 #ifdef __WIN32__
 #include <synchapi.h>
 #endif
