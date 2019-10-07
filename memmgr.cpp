@@ -2,6 +2,12 @@
 
 #ifdef __MEMMGR__
 #ifdef  __cplusplus
+
+static char registered_file[MAX_REGISTER_FILELINES][MAX_FILENAME_LENGTH]={0};
+static int 	registered_line[MAX_REGISTER_FILELINES]={-1};
+static int 	n_registered_file_line=0;
+static 		pthread_mutex_t mutex_file_line;
+
 bool	MEMMGR_push_file_line(const  char  *absolute_filename,   int   line)
 {
 

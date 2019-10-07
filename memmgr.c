@@ -5,6 +5,8 @@
 #include	<stdarg.h>
 #include	<stdint.h>
 #include	<pthread.h>
+#include	<stdbool.h>
+
 
 
 #ifdef _WIN32
@@ -110,13 +112,11 @@
 	static PointerDS_Element ds_pointer_array[MAX_MEMPOINTERS]; // the same allocatedPointers it will have.
 
 
-	static char registered_file[MAX_REGISTER_FILELINES][MAX_FILENAME_LENGTH]={0};
-	static int registered_line[MAX_REGISTER_FILELINES]={-1};
-	static int n_registered_file_line=0;
+
 
 	static 	pthread_mutex_t mutex_main;
 	static 	pthread_mutex_t mutex_main_realloc;
-	static 	pthread_mutex_t mutex_file_line;
+
 
 	//--------------------------------------------------------------------------------------------
 	void  MEMMGR_print_status(void);
@@ -363,7 +363,7 @@
 			MEMMGR_get_filename(heap_allocat->filename,  absolute_filename);
 			heap_allocat->line  =  line;
 
-			random_number  =  (unsigned(rand()%0xFFFF)  <<  16)  |  (rand()%0xFFFF);
+			random_number  =  ((unsigned)(rand()%0xFFFF)  <<  16)  |  (rand()%0xFFFF);
 
 			heap_allocat->pre_crc  =  random_number;
 			heap_allocat->size        =  size;
