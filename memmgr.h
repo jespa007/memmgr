@@ -1,5 +1,9 @@
-#pragma once
+#ifndef __MEMMGR_H__
+#define __MEMMGR_H__
 
+#define MEMMGR_MAJOR_VERSION 	1
+#define MEMMGR_MINOR_VERSION 	1
+#define MEMMGR_PACTH_VERSION 	0
 
 #ifdef __MEMMGR__
 
@@ -36,13 +40,11 @@
 
 	#endif
 
-
-	void test_dicotomic();
-
-
 #else // MEMMGR not defined...
 
 	#define ZG_MEM_DISABLE_REGISTER_MEMORYLEAKS
 	#define ZG_MEM_ENABLE_REGISTER_MEMORYLEAKS
+
+#endif
 
 #endif

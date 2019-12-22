@@ -54,12 +54,7 @@ void * allocate_loop(void *vargp){
 }
 
 
-
-
 int main(int argc, char *argv[]){
-
-	//test_dicotomic();
-	//return 0;
 
 	srand(time(NULL));
 	pthread_t thread_test[N_TEST_THREAD]={NULL};// (allocate_loop);
@@ -69,16 +64,6 @@ int main(int argc, char *argv[]){
 	for(unsigned i=0; i < N_TEST_THREAD; i++){
 		pthread_create(&thread_test[i],NULL,allocate_loop);
 	}
-
-
-
-	// main thread allocate
-	/*for(;;){
-
-		if(getchar()){
-			break;
-		}
-	}*/
 
 	getchar();
 
