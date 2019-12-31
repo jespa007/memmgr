@@ -398,6 +398,11 @@
 		return pointer;
 	}
 	//--------------------------------------------------------------------------------------------
+	void  MEMMGR_free_c_pointer(void  *pointer){
+		free(pointer);
+	}
+	
+	//--------------------------------------------------------------------------------------------
 	void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	{
 

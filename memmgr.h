@@ -11,15 +11,11 @@
 	#define	__FUNCTION__  "??"
 #endif
 
-
-	#define ZG_MEM_DISABLE_REGISTER_MEMORYLEAKS	 	MEM_setEnableRegisterMemoryLeaks(0)
-	#define ZG_MEM_ENABLE_REGISTER_MEMORYLEAKS 		MEM_setEnableRegisterMemoryLeaks(1)
-
 	void 		MEMMGR_print_status();
 	void        *MEMMGR_malloc(size_t  size,  const  char  *filename,  int  line);
 	void        *MEMMGR_realloc(void *ptr, size_t  size,  const  char  *filename,  int  line);
 	void        MEMMGR_free_from_malloc(void  *pointer,  const  char  *filename,  int  line);
-
+	void		MEMMGR_free_c_pointer(void  *pointer);
 	#define  malloc(p)                                      	MEMMGR_malloc(p,__FILE__,  __LINE__)
 	#define  realloc(p,s)                                      	MEMMGR_realloc(p,s,__FILE__,  __LINE__)
 	#define  free(p)                                         	MEMMGR_free_from_malloc(p,__FILE__,  __LINE__)
@@ -41,9 +37,6 @@
 	#endif
 
 #else // MEMMGR not defined...
-
-	#define ZG_MEM_DISABLE_REGISTER_MEMORYLEAKS
-	#define ZG_MEM_ENABLE_REGISTER_MEMORYLEAKS
 
 #endif
 
