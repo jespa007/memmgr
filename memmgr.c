@@ -239,7 +239,7 @@
 		int size=n_allocated_pointers - 1;
 		int idx_min = 0, idx_max = size;
 
-		if (key <= ds_pointer_array[idx_max].pointer){
+		if (key > ds_pointer_array[idx_max].pointer){
 		  idx_min=size;
 		}
 		else{
