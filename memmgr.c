@@ -120,7 +120,7 @@
 
 	//--------------------------------------------------------------------------------------------
 	void  MEMMGR_print_status(void);
-	void  MEMMGR_free_all_allocated_pointers( );
+	void  MEMMGR_free_all_allocated_pointers(void);
 
 	//--------------------------------------------------------------------------------------------
 	// PATH UTILS
@@ -288,7 +288,7 @@
 	}
 	//--------------------------------------------------------------------------------------------
 	// MEMMGR Functions
-	void  MEMMGR_init()
+	void  MEMMGR_init(void)
 	{
 
 		if(!memmgr_was_init)
@@ -331,7 +331,7 @@
 		return false;
 	}
 	//--------------------------------------------------------------------------------------------
-	int  MEMMGR_get_free_cell_memptr_table()
+	int  MEMMGR_get_free_cell_memptr_table(void)
 	{
 		if(n_free_pointers > 0){
 			return free_pointer_idx[n_free_pointers];
@@ -546,7 +546,7 @@
 		}
 	}
 	//----------------------------------------------------------------------------------------
-	void  MEMMGR_free_all_allocated_pointers()
+	void  MEMMGR_free_all_allocated_pointers(void)
 	{
 
 		void *p;

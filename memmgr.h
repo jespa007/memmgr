@@ -11,7 +11,7 @@
 	#define	__FUNCTION__  "??"
 #endif
 
-	void 		MEMMGR_print_status();
+	void 		MEMMGR_print_status(void);
 	void        *MEMMGR_malloc(size_t  size,  const  char  *filename,  int  line);
 	void        *MEMMGR_realloc(void *ptr, size_t  size,  const  char  *filename,  int  line);
 	void        MEMMGR_free_from_malloc(void  *pointer,  const  char  *filename,  int  line);
