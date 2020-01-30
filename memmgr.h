@@ -1,11 +1,23 @@
-#ifndef __MEMMGR_H__
-#define __MEMMGR_H__
+#ifndef __MEMMORY_MANNAGER_H__
+#define __MEMMORY_MANNAGER_H__
 
 #define MEMMGR_MAJOR_VERSION 	1
 #define MEMMGR_MINOR_VERSION 	1
 #define MEMMGR_PACTH_VERSION 	0
 
-#ifdef __MEMMGR__
+#include	<stdlib.h>
+#include	<stdio.h>
+#include	<string.h>
+#include	<memory.h>
+#include	<stdarg.h>
+#include	<stdint.h>
+#include	<pthread.h>
+#include	<stdbool.h>
+
+
+#ifdef _WIN32
+#include	<windows.h>
+#endif
 
 #ifndef  __FUNCTION__
 	#define	__FUNCTION__  "??"
@@ -23,6 +35,16 @@
 	//------------------------------------------------------------------------------------------------------------
 
 	#ifdef  __cplusplus
+		#include          	<vector>
+		#include 			<map>
+		#include 			<regex>
+		#include            <new>
+		#include            <iostream>
+		#include 			<functional>
+		#include 			<string>
+		#include 			<sstream>
+
+
 
 		bool		MEMMGR_push_file_line(const char *absolute_filename,  int  line);
 
@@ -31,13 +53,9 @@
 		void   		operator  delete(void  *p) throw();
 		void   		operator  delete[](void  *p) throw();
 
-		#define	new		                                        (MEMMGR_push_file_line(__FILE__,__LINE__), false)?  NULL  :  new
-		#define	delete		                                	(MEMMGR_push_file_line(__FILE__,__LINE__), false)? throw  : delete
+		#define	new		                                    (MEMMGR_push_file_line(__FILE__,__LINE__), false)?  NULL  : new
+		#define	delete		                                (MEMMGR_push_file_line(__FILE__,__LINE__), false)? throw  : delete
 
 	#endif
-
-#else // MEMMGR not defined...
-
-#endif
 
 #endif
