@@ -54,7 +54,7 @@
 		void   		operator  delete[](void  *p) throw();
 
 		#define	new		                                    (MEMMGR_push_file_line(__FILE__,__LINE__), false)?  NULL  : new
-		#define	delete		                                (MEMMGR_push_file_line(__FILE__,__LINE__), false)? throw  : delete
+		#define	delete		                                 MEMMGR_push_file_line(__FILE__,__LINE__), delete
 
 	#endif
 
