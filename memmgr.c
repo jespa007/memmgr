@@ -24,26 +24,26 @@
 
 
 typedef enum{
-	RESET = 0,
-	BRIGHT = 1,
-	DIM = 2,
-	UNDERLINE = 3,
-	BLINK = 4,
-	REVERSE = 7,
-	HIDDEN = 8
+	TERM_CMD_RESET = 0,
+	TERM_CMD_BRIGHT = 1,
+	TERM_CMD_DIM = 2,
+	TERM_CMD_UNDERLINE = 3,
+	TERM_CMD_BLINK = 4,
+	TERM_CMD_REVERSE = 7,
+	TERM_CMD_HIDDEN = 8
 
 }TERM_CMD;
 
 typedef enum{
 
-	BLACK = 0,
-	RED = 1,
-	GREEN = 2,
-	YELLOW = 3,
-	BLUE = 4,
-	MAGENTA = 5,
-	CYAN = 6,
-	WHITE = 7
+	TERM_COLOR_BLACK = 0,
+	TERM_COLOR_RED = 1,
+	TERM_COLOR_GREEN = 2,
+	TERM_COLOR_YELLOW = 3,
+	TERM_COLOR_BLUE = 4,
+	TERM_COLOR_MAGENTA = 5,
+	TERM_COLOR_CYAN = 6,
+	TERM_COLOR_WHITE = 7
 }TERM_COLOR;
 
 typedef enum{
@@ -164,13 +164,13 @@ void  print_log(FILE *std, const  char  *string_text, ...) {
 #ifdef _WIN32
   SetConsoleTextAttribute(GetStdHandle(std==stderr?STD_ERROR_HANDLE:STD_OUTPUT_HANDLE), std==stderr?FOREGROUND_RED:(FOREGROUND_RED   | FOREGROUND_GREEN | FOREGROUND_BLUE)   | FOREGROUND_INTENSITY);
 #else // ansi color
-  MEMMGR_set_color_terminal(std_type, TERM_CMD::BRIGHT, std==stderr?TERM_COLOR::RED:TERM_COLOR::WHITE, TERM_COLOR::BLACK);
+  MEMMGR_set_color_terminal(std_type, TERM_CMD_BRIGHT, std==stderr?TERM_COLOR_RED:TERM_COLOR_WHITE, TERM_COLOR_BLACK);
 #endif
 	fprintf(std_type, "%s", text);
 #ifdef _WIN32
 	SetConsoleTextAttribute(GetStdHandle(std==stderr?STD_ERROR_HANDLE:STD_OUTPUT_HANDLE), FOREGROUND_RED   | FOREGROUND_GREEN | FOREGROUND_BLUE);
 #else // ansi color
-	MEMMGR_set_color_terminal(std_type, TERM_CMD::BRIGHT, TERM_COLOR::WHITE, TERM_COLOR::BLACK);
+	MEMMGR_set_color_terminal(std_type, TERM_CMD_BRIGHT, TERM_COLOR_WHITE, TERM_COLOR_BLACK);
 #endif
 
 
