@@ -299,7 +299,6 @@ void  MEMMGR_init(void)
 bool  MEMMGR_is_pointer_registered(void *pointer)
 {
 	pthread_mutex_lock(&mutex_main);
-	//std::lock_guard<std::mutex> lg(mutex_main);
 
 	int pos = MEMMGR_dicotomic_search(pointer);
 
