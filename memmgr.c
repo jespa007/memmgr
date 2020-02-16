@@ -452,13 +452,12 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 
 void *MEMMGR_realloc(void *ptr, size_t size,  const  char  *absolute_filename,  int  line) {
 
-	//std::lock_guard<std::mutex> lg(mutex_main_realloc);
-	pthread_mutex_lock(&mutex_main_realloc);
 
 	if (ptr==NULL) {
 		// NULL ptr. realloc should act like malloc.
 		return MEMMGR_malloc(size, absolute_filename, line);
 	}
+
 
 	PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(ptr);
 
@@ -478,8 +477,6 @@ void *MEMMGR_realloc(void *ptr, size_t size,  const  char  *absolute_filename,  
 	}
 	memcpy(new_ptr, ptr, pre_head->size);
 	MEMMGR_free(ptr, absolute_filename, line);
-
-	pthread_mutex_unlock(&mutex_main_realloc);
 
 	return new_ptr;
 }
