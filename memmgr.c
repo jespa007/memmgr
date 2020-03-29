@@ -97,8 +97,6 @@ static PointerDS_Element ds_pointer_array[MAX_MEMPOINTERS]; // the same allocate
 
 
 static 	pthread_mutex_t mutex_main;
-static 	pthread_mutex_t mutex_main_realloc;
-
 
 //--------------------------------------------------------------------------------------------
 void  MEMMGR_print_status(void);
