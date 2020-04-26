@@ -58,13 +58,13 @@ typedef enum{
 // STRUCTS
 
 typedef  struct{
-	void  	*ptr;
+	uintptr_t 	*ptr;
 	char  	filename[MAX_FILENAME_LENGTH];
 	int  	line;
 }InfoAllocatedPointer;
 
 typedef  struct{
-	void *pointer; //this is the element to  be ordered.
+	uintptr_t pointer; //this is the element to  be ordered.
 	int index;
 }PointerDS_Element;
 
@@ -84,14 +84,14 @@ typedef  struct{
 //--------------------------------------------------------------------------------------------
 // GLOBAL VARS
 
-static int	n_allocated_bytes  =  0;
-static int	n_allocated_pointers  =  0;
-static bool	memmgr_was_init  =  false;
+static int	g_n_allocated_bytes  =  0;
+static int	g_n_allocated_pointers  =  0;
+static bool	g_memmgr_was_init  =  false;
 
-static void	*allocated_pointer[MAX_MEMPOINTERS];
-static int 	free_pointer_idx[MAX_MEMPOINTERS]={0};
-static int 	n_free_pointers=0;
-static PointerDS_Element ds_pointer_array[MAX_MEMPOINTERS]; // the same allocatedPointers it will have.
+static void	*g_allocated_pointer[MAX_MEMPOINTERS];
+static int 	g_free_pointer_idx[MAX_MEMPOINTERS]={0};
+static int 	g_n_free_pointers=0;
+static PointerDS_Element g_ds_pointer_array[MAX_MEMPOINTERS]; // the same allocatedPointers it will have.
 
 
 
@@ -183,20 +183,20 @@ void  print_log(FILE *std, const  char  *string_text, ...) {
 //--------------------------------------------------------------------------------------------
 // DICOTOMIC
 
-int MEMMGR_dicotomic_search(void * key)
+int MEMMGR_dicotomic_search(uintptr_t key)
 {
 	int idx_min=0;
-	int idx_max=n_allocated_pointers-1;
+	int idx_max=g_n_allocated_pointers-1;
 	// continue searching while [imin,imax] is not empty
 	while (idx_max >= idx_min)
 	{
 		// calculate the midpoint for roughly equal partition
 		int idx_mid = (idx_min + idx_max ) >> 1;
-		if(ds_pointer_array[idx_mid].pointer == key){
+		if(g_ds_pointer_array[idx_mid].pointer == key){
 			// key found at index idx_mid
 			return idx_mid;
 		// determine which subarray to search
-		}else if (ds_pointer_array[idx_mid].pointer < key){
+		}else if (g_ds_pointer_array[idx_mid].pointer < key){
 			// change min index to search upper subarray
 			idx_min = idx_mid + 1;
 		}else{
@@ -208,46 +208,64 @@ int MEMMGR_dicotomic_search(void * key)
 	return KEY_NOT_FOUND;
 }
 
-bool MEMMGR_dicotomic_insert(void * key, int index)
+bool MEMMGR_dicotomic_insert(uintptr_t key, int index)
 {
-	if(n_allocated_pointers==MAX_MEMPOINTERS){ // array full
+	if(g_n_allocated_pointers==(MAX_MEMPOINTERS-2)){ // array full
 		LOG_ERROR("DS Error full table");
 		return false;
 	}
 
 	// PRE: array is already ordered
-	int size=n_allocated_pointers - 1;
-	int idx_min = 0, idx_max = size;
+	int size=g_n_allocated_pointers;
+	int idx_min = 0, idx_max = g_n_allocated_pointers - 1;
 
-	if (key > ds_pointer_array[idx_max].pointer){
-	  idx_min=size;
-	}
-	else{
-	  while (idx_max > idx_min) {
-		int idx_mid = (idx_min + idx_max) >> 1;
-		if (ds_pointer_array[idx_mid].pointer > key) {
-			idx_max = idx_mid;
+	if(size > 0){
+
+		if (key > g_ds_pointer_array[idx_max].pointer){
+		  idx_min=size;
 		}
 		else{
-			idx_min = idx_mid + 1;
+		  while (idx_max > idx_min) {
+			int idx_mid = (idx_min + idx_max) >> 1;
+			if (g_ds_pointer_array[idx_mid].pointer > key) {
+				idx_max = idx_mid;
+			}
+			else{
+				idx_min = idx_mid + 1;
+			}
+		  }
 		}
-	  }
 	}
 
 	if(idx_min >= 0){
-		for (int i = n_allocated_pointers-1; i >= idx_min; --i){
-			ds_pointer_array[i+1] = ds_pointer_array[i];
+
+		if(idx_min < size){
+			for (int i = g_n_allocated_pointers-1; i >= idx_min; --i){
+				g_ds_pointer_array[i+1] = g_ds_pointer_array[i];
+			}
 		}
-		ds_pointer_array[idx_min].pointer = key;
-		ds_pointer_array[idx_min].index = index;
+		g_ds_pointer_array[idx_min].pointer = key;
+		g_ds_pointer_array[idx_min].index = index;
+
+		/*for(int i=0; i < (g_n_allocated_pointers-1);i++){
+			if(	g_ds_pointer_array[i].pointer > g_ds_pointer_array[i+1].pointer){ // mierda
+				int k=0;
+				k++;
+				LOG_ERROR("Cannot ");
+			}
+		}*/
+
+		g_n_allocated_pointers++;
 		return true;
+	}else{
+		LOG_ERROR("Cannot insert pointer");
 	}
 	return false;
 }
 
-bool MEMMGR_dicotomic_delete(void * key)
+bool MEMMGR_dicotomic_delete(uintptr_t key)
 {
-	if(n_allocated_pointers==0){
+	if(g_n_allocated_pointers==0){
 		LOG_ERROR("DS Error empty table");
 		return false;
 	}
@@ -255,13 +273,20 @@ bool MEMMGR_dicotomic_delete(void * key)
 	int pos=MEMMGR_dicotomic_search(key);
 	//printf("(pos:%i)",pos);
 	if(pos != KEY_NOT_FOUND){
-		//memcpy(&ds_pointer_array[pos],&ds_pointer_array[pos+1],(n_allocated_pointers-pos)*sizeof(PointerDS_Element));
-		for (int i = pos; i < n_allocated_pointers; i++){
-			ds_pointer_array[i] = ds_pointer_array[i+1];
+		//memcpy(&g_ds_pointer_array[pos],&g_ds_pointer_array[pos+1],(g_n_allocated_pointers-pos)*sizeof(PointerDS_Element));
+		for (int i = pos; i < g_n_allocated_pointers; i++){
+			g_ds_pointer_array[i] = g_ds_pointer_array[i+1];
 		}
-		ds_pointer_array[n_allocated_pointers-1].pointer=0;
-		ds_pointer_array[n_allocated_pointers-1].index=0;
+		g_ds_pointer_array[g_n_allocated_pointers-1].pointer=0;
+		g_ds_pointer_array[g_n_allocated_pointers-1].index=0;
+		g_n_allocated_pointers--;
 		return true;
+	}else{
+		/*for(int i = 0; i < g_n_allocated_pointers; i++){
+			printf("\n%p",(void *)g_ds_pointer_array[i].pointer);
+		}*/
+
+		LOG_ERROR("Pointer %p not found",(void *)key);
 	}
 	return false;
 
@@ -271,38 +296,39 @@ bool MEMMGR_dicotomic_delete(void * key)
 void  MEMMGR_init(void)
 {
 
-	if(!memmgr_was_init)
+	if(!g_memmgr_was_init)
 	{
-		n_allocated_bytes  =  0;
-		memset(allocated_pointer,0,sizeof(allocated_pointer));
-		n_allocated_pointers  =  0;
+		g_n_allocated_bytes  =  0;
+		memset(g_allocated_pointer,0,sizeof(g_allocated_pointer));
+		g_n_allocated_pointers  =  0;
 
-		memmgr_was_init  =  true;
-		n_free_pointers = MAX_MEMPOINTERS-1;
-		memset(&ds_pointer_array,-1,sizeof(ds_pointer_array));
+		g_memmgr_was_init  =  true;
+		g_n_free_pointers = MAX_MEMPOINTERS-1;
+		memset(&g_ds_pointer_array,0,sizeof(g_ds_pointer_array));
 
 
-		for(int i = 0; i < n_free_pointers; i++){
-			free_pointer_idx[i]=MAX_MEMPOINTERS-1-i;
+		for(int i = 0; i < g_n_free_pointers; i++){
+			g_free_pointer_idx[i]=MAX_MEMPOINTERS-1-i;
 		}
 
 
-		LOG_INFO("*******************************");
-		LOG_INFO("Memory mannagement initialized!");
-		LOG_INFO("*******************************");
+		LOG_INFO("******************************");
+		LOG_INFO("Memory management initialized!");
+		LOG_INFO("******************************");
 
 	}
 }
 
-bool  MEMMGR_is_pointer_registered(void *pointer)
+bool  MEMMGR_is_pointer_registered(uintptr_t pointer)
 {
 	pthread_mutex_lock(&mutex_main);
 
 	int pos = MEMMGR_dicotomic_search(pointer);
 
 	if(pos >=0){
-		if(ds_pointer_array[pos].pointer == pointer)
+		if(g_ds_pointer_array[pos].pointer == pointer){
 			return true;
+		}
 	}
 
 	pthread_mutex_unlock(&mutex_main);
@@ -312,8 +338,8 @@ bool  MEMMGR_is_pointer_registered(void *pointer)
 //--------------------------------------------------------------------------------------------
 int  MEMMGR_get_free_cell_memptr_table(void)
 {
-	if(n_free_pointers > 0){
-		return free_pointer_idx[n_free_pointers];
+	if(g_n_free_pointers > 0){
+		return g_free_pointer_idx[g_n_free_pointers];
 	}
 	return KEY_NOT_FOUND; // no memory free...
 }
@@ -329,7 +355,7 @@ void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line)
 	int  random_number,index;
 
 
-	if(!memmgr_was_init)  MEMMGR_init();  //  auto_inicialize  return  malloc(size);
+	if(!g_memmgr_was_init)  MEMMGR_init();  //  auto_inicialize  return  malloc(size);
 
 	heap_allocat  =  (PointerPreHeapInfo  *)malloc(sizeof(PointerPreHeapInfo)  +  sizeof(PointerPostHeapInfo)  +  size);
 	if(heap_allocat
@@ -348,21 +374,20 @@ void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line)
 		heap_allocat->size        =  size;
 		heap_allocat->type_allocator  =  MALLOC_ALLOCATOR;
 
-		allocated_pointer[index] 	    = heap_allocat;
+		g_allocated_pointer[index] 	    = heap_allocat;
 
 		*((int  *)((char  *)heap_allocat+size+sizeof(PointerPreHeapInfo)))  =  random_number;
 
-		n_allocated_bytes  +=  size;
-		n_allocated_pointers++;
+		g_n_allocated_bytes  +=  size;
 
 		pointer  =  ((char  *)heap_allocat+sizeof(PointerPreHeapInfo));
 
 		//------------------------------------------------------------
 		// insert to get pointer faster through dicotomic search...
-		MEMMGR_dicotomic_insert(heap_allocat, index);
+		MEMMGR_dicotomic_insert((uintptr_t)heap_allocat, index);
 		//------------------------------------------------------------
 
-		n_free_pointers--;
+		g_n_free_pointers--;
 
 		//  memset  pointer
 		memset(pointer,0,size);
@@ -409,11 +434,11 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 
 
 				//  Mark  freed...
-				allocated_pointer[preheap_allocat->offset_mempointer_table]  =  NULL;
+				g_allocated_pointer[preheap_allocat->offset_mempointer_table]  =  NULL;
 
-				if(n_free_pointers<(MAX_MEMPOINTERS-1)){
-					n_free_pointers++;
-					free_pointer_idx[n_free_pointers] = preheap_allocat->offset_mempointer_table;
+				if(g_n_free_pointers<(MAX_MEMPOINTERS-1)){
+					g_n_free_pointers++;
+					g_free_pointer_idx[g_n_free_pointers] = preheap_allocat->offset_mempointer_table;
 				}
 				else {
 					LOG_ERROR("reached max pointers!");
@@ -422,11 +447,10 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 
 				//-----------------------------------------------------------------
 				// DS delete element ...
-				MEMMGR_dicotomic_delete(base_pointer);
+				MEMMGR_dicotomic_delete((uintptr_t)base_pointer);
 				//----------------------------------------------
 
-				n_allocated_bytes-=preheap_allocat->size;
-				n_allocated_pointers--;
+				g_n_allocated_bytes-=preheap_allocat->size;
 				free(base_pointer);
 
 			}
@@ -486,13 +510,13 @@ void  MEMMGR_print_error_on_wrong_deallocate_method(int  allocator, const char *
 	switch(allocator)
 	{
 	case  MALLOC_ALLOCATOR:
-		LOG_ERROR("ERROR:  allocated_pointer  at  filename  \"%s\"  line  %i  must  freed  with  function  free().",filename,  line);
+		LOG_ERROR("ERROR:  g_allocated_pointer  at  filename  \"%s\"  line  %i  must  freed  with  function  free().",filename,  line);
 		break;
 	case  NEW_ALLOCATOR:
-		LOG_ERROR("ERROR:  allocated_pointer  at  filename  \"%s\"  line  %i  must  freed  with  operator  delete.",filename,  line);
+		LOG_ERROR("ERROR:  g_allocated_pointer  at  filename  \"%s\"  line  %i  must  freed  with  operator  delete.",filename,  line);
 		break;
 	case  NEW_WITH_BRACETS_ALLOCATOR:
-		LOG_ERROR("ERROR:  allocated_pointer  at  filename  \"%s\"  line  %i  must  freed  with  operator  delete[].",filename,  line);
+		LOG_ERROR("ERROR:  g_allocated_pointer  at  filename  \"%s\"  line  %i  must  freed  with  operator  delete[].",filename,  line);
 		break;
 	}
 }
@@ -529,12 +553,12 @@ void  MEMMGR_free_all_allocated_pointers(void)
 
 	for(int i = 0; i < MAX_MEMPOINTERS; i++)
 	{
-		p = allocated_pointer[i];
+		p = g_allocated_pointer[i];
 		if(p)
 		{
 			//PointerPreHeapInfo  *pre_head  =  (PointerPreHeapInfo *)p;
 			MEMMGR_free((char *)p+sizeof(PointerPreHeapInfo),"free_all_allocated_pointers()",0);
-			allocated_pointer[i] = NULL;
+			g_allocated_pointer[i] = NULL;
 		}
 	}
 }
@@ -548,19 +572,19 @@ void  MEMMGR_print_status(void)
 
 	for(i  =  0;  i  <  MAX_MEMPOINTERS;  i++)
 	{
-		if((preheap_allocat  =  (PointerPreHeapInfo    *)allocated_pointer[i]))
+		if((preheap_allocat  =  (PointerPreHeapInfo    *)g_allocated_pointer[i]))
 		{
 			if(preheap_allocat->line>0 && (strcmp("??",preheap_allocat->filename)!=0)) // leak from others libs
 			{
-				LOG_ERROR("%s:%i:Allocated  pointer  NOT  DEALLOCATED (%p).",preheap_allocat->filename,  preheap_allocat->line,allocated_pointer[preheap_allocat->offset_mempointer_table]);
+				LOG_ERROR("%s:%i:Allocated  pointer  NOT  DEALLOCATED (%p).",preheap_allocat->filename,  preheap_allocat->line,g_allocated_pointer[preheap_allocat->offset_mempointer_table]);
 			}
 		}
 	}
 	//-----
-	if(n_allocated_pointers>0  ||  n_allocated_bytes>0)
+	if(g_n_allocated_pointers>0  ||  g_n_allocated_bytes>0)
 	{
-		LOG_ERROR("bytes  to  deallocate  =  %i  bytes",n_allocated_bytes);
-		LOG_ERROR("Mempointers  to  deallocate  =  %i",n_allocated_pointers);
+		LOG_ERROR("bytes  to  deallocate  =  %i  bytes",g_n_allocated_bytes);
+		LOG_ERROR("Mempointers  to  deallocate  =  %i",g_n_allocated_pointers);
 	}
 	else
 	{

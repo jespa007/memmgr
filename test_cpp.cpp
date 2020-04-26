@@ -2,6 +2,8 @@
 #include <synchapi.h>
 #endif
 
+#include <thread>
+
 #ifdef __GNUC__
 #include <sys/stat.h>
 #include <dirent.h>

@@ -7,6 +7,7 @@
 #endif
 
 #include <pthread.h>
+#include <time.h>
 
 #ifdef __GNUC__
 #include <sys/stat.h>
@@ -19,7 +20,7 @@
 
 #include "memmgr.h"
 
-#define N_TEST_THREAD 100
+#define N_TEST_THREAD 2
 #define ITERATIONS	100
 
 
@@ -62,7 +63,7 @@ int main(int argc, char *argv[]){
 	printf("testing allocation multithread...\n");
 
 	for(unsigned i=0; i < N_TEST_THREAD; i++){
-		pthread_create(&thread_test[i],NULL,allocate_loop);
+		pthread_create(&thread_test[i],NULL,allocate_loop,NULL);
 	}
 
 	getchar();
