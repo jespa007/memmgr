@@ -37,7 +37,6 @@
 	#ifdef  __cplusplus
 		#include          	<vector>
 		#include 			<map>
-		#include 			<regex>
 		#include            <new>
 		#include            <iostream>
 		#include 			<functional>
