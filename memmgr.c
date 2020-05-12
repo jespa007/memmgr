@@ -286,7 +286,7 @@ bool MEMMGR_dicotomic_delete(uintptr_t key)
 			printf("\n%p",(void *)g_ds_pointer_array[i].pointer);
 		}*/
 
-		LOG_ERROR("Pointer %p not found",(void *)key);
+		LOG_ERROR("Pointer %p not found (Corrupt memory?!?!))",(void *)key);
 	}
 	return false;
 
@@ -447,11 +447,10 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 
 				//-----------------------------------------------------------------
 				// DS delete element ...
-				MEMMGR_dicotomic_delete((uintptr_t)base_pointer);
-				//----------------------------------------------
-
-				g_n_allocated_bytes-=preheap_allocat->size;
-				free(base_pointer);
+				if(MEMMGR_dicotomic_delete((uintptr_t)base_pointer)){
+					g_n_allocated_bytes-=preheap_allocat->size;
+					free(base_pointer);
+				}
 
 			}
 			else
