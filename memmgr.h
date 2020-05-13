@@ -42,6 +42,7 @@
 		#include 			<functional>
 		#include 			<string>
 		#include 			<sstream>
+		#include 			<regex>   // keep regex to avoid warnings error: invalid pure specifier (only ‘= 0’ ...
 
 
 
