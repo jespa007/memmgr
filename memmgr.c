@@ -44,7 +44,7 @@ typedef enum{
 	TERM_COLOR_MAGENTA = 5,
 	TERM_COLOR_CYAN = 6,
 	TERM_COLOR_WHITE = 7
-}TERM_COLOR;
+}TermColor;
 
 typedef enum{
 		UNKNOWN_ALLOCATE=0,
