@@ -1,4 +1,10 @@
 //----------------------------
+Date: 06/07/2020
+Version: 1.1.2
+
+ignore pointers not registered in main table  c++
+
+//----------------------------
 Date: 22/12/2019
 Version: 1.1.1
 Fix issue

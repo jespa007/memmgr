@@ -20,8 +20,8 @@
 
 #include "memmgr.h"
 
-#define N_TEST_THREAD 2
-#define ITERATIONS	100
+#define N_TEST_THREAD 100
+#define ITERATIONS	10000
 
 
 
@@ -58,7 +58,7 @@ void * allocate_loop(void *vargp){
 int main(int argc, char *argv[]){
 
 	srand(time(NULL));
-	pthread_t thread_test[N_TEST_THREAD]={NULL};// (allocate_loop);
+	pthread_t thread_test[N_TEST_THREAD]={0};// (allocate_loop);
 
 	printf("testing allocation multithread...\n");
 

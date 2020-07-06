@@ -16,7 +16,7 @@
 #include "memmgr.h"
 
 #define N_TEST_THREAD 100
-#define ITERATIONS	100
+#define ITERATIONS	10000
 
 
 
@@ -45,10 +45,8 @@ void allocate_loop(){
 			arr_cpp[i]=i;
 		}
 
-
 		delete [] arr_cpp;
 		delete size_cpp;
-
 
 		int time_ms=rand()%10+10;
 #if defined(__WIN32__) || defined(_WIN32) || defined(WIN32) || defined(__WINDOWS__) || defined(__TOS_WIN__)
@@ -69,7 +67,7 @@ int main(int argc, char *argv[]){
 	//return 0;
 
 	srand(time(NULL));
-	std::thread *thread_test[N_TEST_THREAD]={NULL};// (allocate_loop);
+	std::thread *thread_test[N_TEST_THREAD]={0};// (allocate_loop);
 
 	printf("testing allocation multithread...\n");
 
