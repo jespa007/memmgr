@@ -3,9 +3,9 @@
 
 //--------------------------------------------------------------------------------------------
 // DEFINES
-#define	MAX_MEMPOINTERS			80000
-#define	MAX_FILENAME_LENGTH		50
-#define MAX_REGISTER_FILELINES	32
+#define	MAX_MEMPOINTERS					80000
+#define	MEMMGR_MAX_FILENAME_LENGTH		50
+#define MAX_REGISTER_FILELINES			32
 
 #define	GET_SIZE_PTR(p)		*((int  *)((char  *)p  -  sizeof(int) - sizeof(int)))
 #define GET_PREHEADER(p)	((PointerPreHeapInfo    *)((char  *)p-sizeof(PointerPreHeapInfo)))
@@ -17,8 +17,6 @@
 
 //--------------------------------------------------------------------------------------------
 //  turn  off  macros...
-#undef	new
-#undef	delete
 #undef  malloc
 #undef  free
 
@@ -59,7 +57,7 @@ typedef enum{
 
 typedef  struct{
 	uintptr_t 	*ptr;
-	char  	filename[MAX_FILENAME_LENGTH];
+	char  	filename[MEMMGR_MAX_FILENAME_LENGTH];
 	int  	line;
 }InfoAllocatedPointer;
 
@@ -71,7 +69,7 @@ typedef  struct{
 typedef  struct{
 	int		type_allocator;
 	int		offset_mempointer_table;
-	char	filename[MAX_FILENAME_LENGTH];  //  base    		-16-256
+	char	filename[MEMMGR_MAX_FILENAME_LENGTH];  //  base    		-16-256
 	int		line;          					//  base          	-16
 	int		size;                      		//  base          	-8
 	int		pre_crc;                		//  base          	-4
@@ -126,7 +124,7 @@ void  MEMMGR_get_filename(char  *filename, const char *absolute_filename)
 				to_down_ptr--;
 				i++;
 
-			}while(*(to_down_ptr-1)  !=  '\\'  &&  *(to_down_ptr-1)  !=  '/'  &&  to_down_ptr  >  absolute_filename && i < MAX_FILENAME_LENGTH);
+			}while(*(to_down_ptr-1)  !=  '\\'  &&  *(to_down_ptr-1)  !=  '/'  &&  to_down_ptr  >  absolute_filename && i < MEMMGR_MAX_FILENAME_LENGTH);
 		}
 
 		sprintf(filename,"%s",to_down_ptr);
@@ -525,7 +523,7 @@ void  MEMMGR_print_error_on_wrong_deallocate_method(int  allocator, const char *
 //----------------------------------------------------------------------------------------
 void  MEMMGR_free_from_malloc(void  *p,  const  char  *absolute_filename,  int  line  )
 {
-	char  filename[MAX_FILENAME_LENGTH];
+	char  filename[MEMMGR_MAX_FILENAME_LENGTH];
 	MEMMGR_get_filename(filename,absolute_filename);
 
 	if(p)

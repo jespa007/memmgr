@@ -23,7 +23,7 @@ if(MSVC)
 
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")  # g++ / gcc
 	SET( COMMON_C_PARAMS	 "  ")
-	SET( COMMON_CXX_PARAMS 	 " -std=gnu++0x ")
+	SET( COMMON_CXX_PARAMS 	 " -std=gnu++0x -g -O0 ")
 	
 endif()
  
@@ -38,8 +38,6 @@ MESSAGE ("Target : " ${TARGET})
 
 #Redefine output dir ...
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
-
-
 
 
 #-----------------------------------------

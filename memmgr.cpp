@@ -1,6 +1,10 @@
 #include "memmgr.c"
 
-static char registered_file[MAX_REGISTER_FILELINES][MAX_FILENAME_LENGTH]={0};
+#undef	new
+#undef	delete
+
+
+static char registered_file[MAX_REGISTER_FILELINES][MEMMGR_MAX_FILENAME_LENGTH]={0};
 static int 	registered_line[MAX_REGISTER_FILELINES]={-1};
 static int 	n_registered_file_line=0;
 static 		pthread_mutex_t mutex_file_line;
@@ -32,7 +36,7 @@ void*  operator  new(size_t  size)
 		return malloc(size);
 	}*/
 
-	char source_file[MAX_FILENAME_LENGTH]={"??"};
+	char source_file[MEMMGR_MAX_FILENAME_LENGTH]={"??"};
 	int source_line=0;
 
 	pthread_mutex_lock(&mutex_file_line);//.lock();
@@ -71,7 +75,7 @@ void*  operator  new[](size_t  size)
 	}*/
 
 
-	char source_file[MAX_FILENAME_LENGTH]={"??"};
+	char source_file[MEMMGR_MAX_FILENAME_LENGTH]={"??"};
 	int source_line=0;
 
 	if(n_registered_file_line > 0)
@@ -108,7 +112,7 @@ void  operator  delete(void  *pointer) throw()
 	// GET FILE/LINE
 	pthread_mutex_lock(&mutex_file_line);
 
-	char source_file[MAX_FILENAME_LENGTH]={"??"};
+	char source_file[MEMMGR_MAX_FILENAME_LENGTH]={"??"};
 	int source_line=0;
 
 	if(n_registered_file_line > 0)
@@ -170,7 +174,7 @@ void  operator  delete[](void  *pointer) throw()
 
 	pthread_mutex_lock(&mutex_file_line);
 
-	char source_file[MAX_FILENAME_LENGTH]={"??"};
+	char source_file[MEMMGR_MAX_FILENAME_LENGTH]={"??"};
 	int source_line(0);
 
 	if(n_registered_file_line > 0)
