@@ -280,10 +280,6 @@ bool MEMMGR_dicotomic_delete(uintptr_t key)
 		g_n_allocated_pointers--;
 		return true;
 	}else{
-		/*for(int i = 0; i < g_n_allocated_pointers; i++){
-			printf("\n%p",(void *)g_ds_pointer_array[i].pointer);
-		}*/
-
 		LOG_LEVEL_ERROR("Pointer %p not found (Corrupt memory?!?!))",(void *)key);
 	}
 	return false;
