@@ -1,5 +1,5 @@
 /bin/
 /.pydevproject
 /.settings/
-/build_gcc/
+/build/
 *.exe
