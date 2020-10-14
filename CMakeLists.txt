@@ -22,8 +22,8 @@ if(MSVC)
 	add_definitions(/wd4244)
 
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")  # g++ / gcc
-	SET( COMMON_C_PARAMS	 "  ")
-	SET( COMMON_CXX_PARAMS 	 " -std=gnu++0x -g -O0 ")
+	SET( COMMON_C_PARAMS	 " -pthread ")
+	SET( COMMON_CXX_PARAMS 	 " -pthread -std=gnu++0x -g -O0 ")
 	
 endif()
  

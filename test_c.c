@@ -25,7 +25,7 @@
 
 
 
-boolean exit_thread=false;
+int exit_thread=0;
 
 void * allocate_loop(void *vargp){
 	while(!exit_thread){
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]){
 
 	getchar();
 
-	exit_thread=true;
+	exit_thread=1;
 	for(unsigned i=0; i < N_TEST_THREAD; i++){
 		pthread_join(thread_test[i], NULL);
 	}
