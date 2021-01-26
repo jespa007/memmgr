@@ -23,7 +23,7 @@ if(MSVC)
 
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")  # g++ / gcc
 	SET( COMMON_C_PARAMS	 " -pthread ")
-	SET( COMMON_CXX_PARAMS 	 " -pthread -std=gnu++0x -g -O0 ")
+	SET( COMMON_CXX_PARAMS 	 " -pthread -std=gnu++0x -g -O0")
 	
 endif()
  

@@ -100,7 +100,7 @@ void*  operator  new[](size_t  size)
 
 }
 //--------------------------------------------------------------------------------------------
-void  operator  delete(void  *pointer) throw()
+void  operator  delete(void  *pointer) noexcept(true)
 {
 	/*if(n_registered_file_line==0){
 		free(pointer);
@@ -127,7 +127,7 @@ void  operator  delete(void  *pointer) throw()
 
 	if(pointer)
 	{
-		if(!MEMMGR_is_pointer_registered((uintptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
+		if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
 		{
 			LOG_LEVEL_ERROR("(%s:%i): allocated_pointer NOT REGISTERED OR POSSIBLE MEMORY CORRUPTION?!?!",source_file,  source_line);
 		}
@@ -164,7 +164,7 @@ void  operator  delete(void  *pointer) throw()
 
 }
 //--------------------------------------------------------------------------------------------
-void  operator  delete[](void  *pointer) throw()
+void  operator  delete[](void  *pointer) noexcept(true)
 {
 	/*if(n_registered_file_line==0){
 		free(pointer);
@@ -192,7 +192,7 @@ void  operator  delete[](void  *pointer) throw()
 	if(pointer!=NULL)
 	{
 
-		if(!MEMMGR_is_pointer_registered((uintptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
+		if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
 		{
 			LOG_LEVEL_ERROR("(%s:%i): allocated_pointer NOT REGISTERED WITH MALLOC OR NEW!",source_file,  source_line);
 		}

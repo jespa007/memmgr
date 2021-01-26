@@ -57,8 +57,8 @@ typedef enum{
 
 typedef  struct{
 	uintptr_t 	*ptr;
-	char  	filename[MEMMGR_MAX_FILENAME_LENGTH];
-	int  	line;
+	char  		filename[MEMMGR_MAX_FILENAME_LENGTH];
+	int  		line;
 }InfoAllocatedPointer;
 
 typedef  struct{
@@ -181,7 +181,7 @@ void  print(FILE *std, const  char  *string_text, ...) {
 //--------------------------------------------------------------------------------------------
 // DICOTOMIC
 
-int MEMMGR_dicotomic_search(uintptr_t key)
+int MEMMGR_dicotomic_search(intptr_t key)
 {
 	int idx_min=0;
 	int idx_max=g_n_allocated_pointers-1;
@@ -206,7 +206,7 @@ int MEMMGR_dicotomic_search(uintptr_t key)
 	return KEY_NOT_FOUND;
 }
 
-bool MEMMGR_dicotomic_insert(uintptr_t key, int index)
+bool MEMMGR_dicotomic_insert(intptr_t key, int index)
 {
 	if(g_n_allocated_pointers==(MAX_MEMPOINTERS-2)){ // array full
 		LOG_LEVEL_ERROR("DS Error full table");
@@ -261,7 +261,7 @@ bool MEMMGR_dicotomic_insert(uintptr_t key, int index)
 	return false;
 }
 
-bool MEMMGR_dicotomic_delete(uintptr_t key)
+bool MEMMGR_dicotomic_delete(intptr_t key)
 {
 	if(g_n_allocated_pointers==0){
 		LOG_LEVEL_ERROR("DS Error empty table");
@@ -313,7 +313,7 @@ void  MEMMGR_init(void)
 	}
 }
 
-bool  MEMMGR_is_pointer_registered(uintptr_t pointer)
+bool  MEMMGR_is_pointer_registered(intptr_t pointer)
 {
 
 	pthread_mutex_lock(&mutex_main);
@@ -380,7 +380,7 @@ void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line)
 
 		//------------------------------------------------------------
 		// insert to get pointer faster through dicotomic search...
-		MEMMGR_dicotomic_insert((uintptr_t)heap_allocat, index);
+		MEMMGR_dicotomic_insert((intptr_t)heap_allocat, index);
 		//------------------------------------------------------------
 
 		g_n_free_pointers--;
@@ -443,7 +443,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 
 				//-----------------------------------------------------------------
 				// DS delete element ...
-				if(MEMMGR_dicotomic_delete((uintptr_t)base_pointer)){
+				if(MEMMGR_dicotomic_delete((intptr_t)base_pointer)){
 					g_n_allocated_bytes-=preheap_allocat->size;
 					free(base_pointer);
 				}
