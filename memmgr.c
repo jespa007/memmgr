@@ -62,7 +62,7 @@ typedef  struct{
 }InfoAllocatedPointer;
 
 typedef  struct{
-	uintptr_t pointer; //this is the element to  be ordered.
+	intptr_t pointer; //this is the element to  be ordered.
 	int index;
 }PointerDS_Element;
 
