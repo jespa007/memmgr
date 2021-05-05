@@ -125,7 +125,7 @@ void  operator  delete(void  *pointer) noexcept(true)
 	pthread_mutex_unlock(&mutex_file_line);
 	//mutex_file_line.unlock();
 
-	if(pointer)
+	if(pointer != NULL)
 	{
 		if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
 		{
