@@ -413,56 +413,50 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	PointerPostHeapInfo  *postheap_allocat  =  NULL;
 	void  *base_pointer;
 
-	if(pointer)
-	{
-
-		//  Getheaders...
-		base_pointer  =  preheap_allocat    =  GET_PREHEADER(pointer);
-		postheap_allocat  =  GET_POSTHEADER(pointer);
-
-		//  Check  headers...
-		if(preheap_allocat->pre_crc  ==  postheap_allocat->post_crc)  //  crc  ok  :)
-		{
-
-			if(preheap_allocat->offset_mempointer_table  >=  0  &&  preheap_allocat->offset_mempointer_table  <=  MAX_MEMPOINTERS)
-			{
-				//  deallocate  pointer  will  be  ok  :)
-
-
-				//  Mark  freed...
-				g_allocated_pointer[preheap_allocat->offset_mempointer_table]  =  NULL;
-
-				if(g_n_free_pointers<(MAX_MEMPOINTERS-1)){
-					g_n_free_pointers++;
-					g_free_pointer_idx[g_n_free_pointers] = preheap_allocat->offset_mempointer_table;
-				}
-				else {
-					LOG_LEVEL_ERROR("reached max pointers!");
-				}
-
-
-				//-----------------------------------------------------------------
-				// DS delete element ...
-				if(MEMMGR_dicotomic_delete((intptr_t)base_pointer)){
-					g_n_allocated_bytes-=preheap_allocat->size;
-					free(base_pointer);
-				}
-
-			}
-			else
-			{
-				LOG_LEVEL_ERROR("MEM  ERROR:  bad  index  mem  table  in  file  \"%s\"  at  line  %i.",filename,line);
-			}
-		}
-		else
-		{
-			LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  \"%s\"  at  line  %i.",filename,line);
-		}
+	if(pointer == NULL){
+		LOG_LEVEL_ERROR("ERROR:  passed  pointer  is  null  \"%s\"  at  row  %i.",filename,line);
+		goto MEMMGR_free_continue;
 	}
-	else
+
+
+	//  Getheaders...
+	base_pointer  =  preheap_allocat    =  GET_PREHEADER(pointer);
+	postheap_allocat  =  GET_POSTHEADER(pointer);
+
+	//  Check  headers...
+	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		 LOG_LEVEL_ERROR("ERROR:  passed  pointer  is  null  \"%s\"  at  row  %i.",filename,line);
+		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  \"%s\"  at  line  %i.",filename,line);
+		goto MEMMGR_free_continue;
 	}
+
+	if(preheap_allocat->offset_mempointer_table  <  0  ||  preheap_allocat->offset_mempointer_table  >=  MAX_MEMPOINTERS)
+	{
+		LOG_LEVEL_ERROR("MEM  ERROR:  bad  index  mem  table  in  file  \"%s\"  at  line  %i.",filename,line);
+		goto MEMMGR_free_continue;
+	}
+
+	//  deallocate  pointer  will  be  ok  :)
+
+	//  Mark  freed...
+	g_allocated_pointer[preheap_allocat->offset_mempointer_table]  =  NULL;
+
+	if(g_n_free_pointers>=(MAX_MEMPOINTERS-1)){
+		LOG_LEVEL_ERROR("reached max pointers!");
+		goto MEMMGR_free_continue;
+	}
+
+	g_n_free_pointers++;
+	g_free_pointer_idx[g_n_free_pointers] = preheap_allocat->offset_mempointer_table;
+
+	//-----------------------------------------------------------------
+	// DS delete element ...
+	if(MEMMGR_dicotomic_delete((intptr_t)base_pointer)){
+		g_n_allocated_bytes-=preheap_allocat->size;
+		free(base_pointer);
+	}
+
+MEMMGR_free_continue:
 
 	pthread_mutex_unlock(&mutex_main);
 }
@@ -521,24 +515,34 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *absolute_filename,  int  
 {
 	char  filename[MEMMGR_MAX_FILENAME_LENGTH];
 	MEMMGR_get_filename(filename,absolute_filename);
+	PointerPreHeapInfo  *preheap_allocat  =  NULL;
+	PointerPostHeapInfo  *postheap_allocat  =  NULL;
 
-	if(p)
-	{
-		PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(p);
 
-		if(pre_head->type_allocator  ==  MALLOC_ALLOCATOR)
-		{
-			MEMMGR_free(p,  filename,  line);
-		}
-		else  //  error
-		{
-			MEMMGR_print_error_on_wrong_deallocate_method(pre_head->type_allocator, filename, line);
-		}
-	}
-	else
+	if(p == NULL)
 	{
 		LOG_LEVEL_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  \"%s\"  line  %i.",filename,  line);
+		return;
 	}
+
+	preheap_allocat  =  GET_PREHEADER(p);
+	postheap_allocat  =  GET_POSTHEADER(p);
+
+	//  Check  headers...
+	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
+	{
+		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  \"%s\"  at  line  %i.",filename,line);
+		return;
+	}
+
+	if(preheap_allocat->type_allocator  !=  MALLOC_ALLOCATOR)
+	{
+		MEMMGR_print_error_on_wrong_deallocate_method(preheap_allocat->type_allocator, filename, line);
+		return;
+
+	}
+
+	MEMMGR_free(p,  filename,  line);
 }
 //----------------------------------------------------------------------------------------
 void  MEMMGR_free_all_allocated_pointers(void)

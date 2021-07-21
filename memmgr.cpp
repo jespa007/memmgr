@@ -102,15 +102,13 @@ void*  operator  new[](size_t  size)
 //--------------------------------------------------------------------------------------------
 void  operator  delete(void  *pointer) noexcept(true)
 {
-	/*if(n_registered_file_line==0){
-		free(pointer);
-		return;
-	}*/
-
+	PointerPreHeapInfo *preheap_allocat=NULL;
+	PointerPostHeapInfo *postheap_allocat=NULL;
 
 	//---------------------------------------------------
 	// GET FILE/LINE
 	pthread_mutex_lock(&mutex_file_line);
+
 
 	char source_file[MEMMGR_MAX_FILENAME_LENGTH]={"??"};
 	int source_line=0;
@@ -125,51 +123,43 @@ void  operator  delete(void  *pointer) noexcept(true)
 	pthread_mutex_unlock(&mutex_file_line);
 	//mutex_file_line.unlock();
 
-	if(pointer != NULL)
-	{
-		if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
-		{
-			LOG_LEVEL_ERROR("(%s:%i): allocated_pointer NOT REGISTERED OR POSSIBLE MEMORY CORRUPTION?!?!",source_file,  source_line);
-		}
-		else
-		{
-
-			PointerPreHeapInfo   *pre_head   =  GET_PREHEADER(pointer);
-			PointerPostHeapInfo  *post_head  =  GET_POSTHEADER(pointer);
-
-			if(pre_head->pre_crc  ==  post_head->post_crc)
-			{
-				if(pre_head->type_allocator  ==  NEW_ALLOCATOR)
-				{
-					MEMMGR_free(pointer,  source_file,  source_line);
-				}
-				else  //  error
-				{
-					MEMMGR_print_error_on_wrong_deallocate_method(pre_head->type_allocator,  source_file,  source_line);
-				}
-			}
-			else
-			{
-				LOG_LEVEL_ERROR("(%s:%i): CRC  error!",source_file,  source_line);
-			}
-		}
-	}
-	else
+	if(pointer == NULL)
 	{
 		LOG_LEVEL_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  \"%s\"  line  %i.",source_file,  source_line);
+		return;
+	}
+
+	preheap_allocat  =  GET_PREHEADER(pointer);
+	postheap_allocat  =  GET_POSTHEADER(pointer);
+
+	if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
+	{
+		LOG_LEVEL_ERROR("(%s:%i): allocated_pointer NOT REGISTERED OR POSSIBLE MEMORY CORRUPTION?!?!",source_file,  source_line);
+		return;
 	}
 
 
+	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)
+	{
+		LOG_LEVEL_ERROR("(%s:%i): CRC  error!",source_file,  source_line);
+		return;
+	}
 
+	if(preheap_allocat->type_allocator  !=  NEW_ALLOCATOR)
+	{
+		MEMMGR_print_error_on_wrong_deallocate_method(preheap_allocat->type_allocator,  source_file,  source_line);
+		return;
+	}
+
+
+	MEMMGR_free(pointer,  source_file,  source_line);
 
 }
 //--------------------------------------------------------------------------------------------
 void  operator  delete[](void  *pointer) noexcept(true)
 {
-	/*if(n_registered_file_line==0){
-		free(pointer);
-		return;
-	}*/
+	PointerPreHeapInfo *preheap_allocat=NULL;
+	PointerPostHeapInfo *postheap_allocat=NULL;
 
 
 	pthread_mutex_lock(&mutex_file_line);
@@ -187,38 +177,37 @@ void  operator  delete[](void  *pointer) noexcept(true)
 
 	pthread_mutex_unlock(&mutex_file_line);
 
-	//mutex_file_line.unlock();
 
-	if(pointer!=NULL)
-	{
-
-		if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
-		{
-			LOG_LEVEL_ERROR("(%s:%i): allocated_pointer NOT REGISTERED WITH MALLOC OR NEW!",source_file,  source_line);
-		}
-		else
-		{
-
-			PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(pointer);
-
-			if(pre_head->type_allocator  ==  NEW_WITH_BRACETS_ALLOCATOR)
-			{
-				MEMMGR_free(pointer,  source_file,  source_line);
-			}
-			else  //  error
-			{
-				MEMMGR_print_error_on_wrong_deallocate_method(pre_head->type_allocator,  source_file,  source_line);
-			}
-		}
-	}
-	else
+	if(pointer==NULL)
 	{
 		LOG_LEVEL_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  \"%s\"  line  %i",source_file,  source_line);
+		return;
 	}
 
-	/*if(n_registered_file_line > 0){
-		n_registered_file_line--;
-	}*/
+	preheap_allocat  =  GET_PREHEADER(pointer);
+	postheap_allocat  =  GET_POSTHEADER(pointer);
+
+	//  Check  headers...
+	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
+	{
+		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  \"%s\"  at  line  %i.",source_file,source_line);
+		return;
+	}
+
+	if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
+	{
+		LOG_LEVEL_ERROR("(%s:%i): allocated_pointer NOT REGISTERED WITH MALLOC OR NEW!",source_file,  source_line);
+		return;
+	}
+
+	if(preheap_allocat->type_allocator  !=  NEW_WITH_BRACETS_ALLOCATOR)
+	{
+		MEMMGR_print_error_on_wrong_deallocate_method(preheap_allocat->type_allocator,  source_file,  source_line);
+		return;
+	}
+
+	MEMMGR_free(pointer,  source_file,  source_line);
+
 
 }
 
