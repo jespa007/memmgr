@@ -1,0 +1,5 @@
+/bin/
+/.pydevproject
+/.settings/
+/build/
+*.exe

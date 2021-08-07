@@ -1,0 +1,36 @@
+//----------------------------
+Date: 20/07/2021
+Version: 1.1.4
+
+Fix bug not check pre/post crc at free
+
+//----------------------------
+Date: 06/07/2020
+Version: 1.1.3
+
+Fix compatible version gcc 8.2
+
+//----------------------------
+Date: 06/07/2020
+Version: 1.1.2
+
+ignore pointers not registered in main table  c++
+
+//----------------------------
+Date: 22/12/2019
+Version: 1.1.1
+Fix issue
+
+//----------------------------
+Date: 22/12/2019
+Version: 1.1.0
+Exit version
+
+Port to c
+
+//----------------------------
+Date: 04/10/2019
+Version: 1.0.0
+Exit version
+
+First exit
