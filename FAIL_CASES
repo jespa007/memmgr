@@ -1,0 +1,6 @@
+"invalid pure specifier (only `= 0' is allowed) before ';'"
+-----------------------------------------------------------
+
+In somewhere if you have these includes it could appear the error,
+
+* random  

@@ -59,6 +59,7 @@
 		#define	delete		  		                        (MEMMGR_push_file_line(__FILE__,__LINE__),false)?abort(): delete
 
 
+
 	#endif
 
 #endif
