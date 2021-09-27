@@ -23,25 +23,23 @@
 	#define	__FUNCTION__  "??"
 #endif
 
+
 	void 		MEMMGR_print_status(void);
 	void        *MEMMGR_malloc(size_t  size,  const  char  *filename,  int  line);
 	void        *MEMMGR_realloc(void *ptr, size_t  size,  const  char  *filename,  int  line);
 	void        MEMMGR_free_from_malloc(void  *pointer,  const  char  *filename,  int  line);
 	void		MEMMGR_free_c_pointer(void  *pointer);
-	#define  malloc(p)                                      	MEMMGR_malloc(p,__FILE__,  __LINE__)
+
+
+
+	#define  malloc(s)                                      	MEMMGR_malloc(s,__FILE__,  __LINE__)
 	#define  realloc(p,s)                                      	MEMMGR_realloc(p,s,__FILE__,  __LINE__)
 	#define  free(p)                                         	MEMMGR_free_from_malloc(p,__FILE__,  __LINE__)
 
 	//------------------------------------------------------------------------------------------------------------
 
 	#ifdef  __cplusplus
-		#include          	<vector>
-		#include 			<map>
 		#include            <new>
-		#include            <iostream>
-		#include 			<functional>
-		#include 			<string>
-		#include 			<sstream>
 		#include 			<regex>   // keep regex to avoid warnings error: invalid pure specifier (only ‘= 0’ ...
 
 
@@ -57,6 +55,7 @@
 
 		#define	new		                                    (MEMMGR_push_file_line(__FILE__,__LINE__),false)?NULL:new
 		#define	delete		  		                        (MEMMGR_push_file_line(__FILE__,__LINE__),false)?abort(): delete
+
 
 
 
