@@ -114,7 +114,6 @@ void  MEMMGR_get_filename(char  *filename, const char *absolute_filename)
 
 	if((lenght = (strlen(absolute_filename)-1)) > 0)
 	{
-
 		to_down_ptr = &absolute_filename[lenght-1];
 		//  get  name  ...
 		if((to_down_ptr-1)  >=  absolute_filename)
@@ -123,7 +122,6 @@ void  MEMMGR_get_filename(char  *filename, const char *absolute_filename)
 			{
 				to_down_ptr--;
 				i++;
-
 			}while(*(to_down_ptr-1)  !=  '\\'  &&  *(to_down_ptr-1)  !=  '/'  &&  to_down_ptr  >  absolute_filename && i < MEMMGR_MAX_FILENAME_LENGTH);
 		}
 
@@ -245,14 +243,6 @@ bool MEMMGR_dicotomic_insert(intptr_t key, int index)
 		g_ds_pointer_array[idx_min].pointer = key;
 		g_ds_pointer_array[idx_min].index = index;
 
-		/*for(int i=0; i < (g_n_allocated_pointers-1);i++){
-			if(	g_ds_pointer_array[i].pointer > g_ds_pointer_array[i+1].pointer){ // mierda
-				int k=0;
-				k++;
-				LOG_LEVEL_ERROR("Cannot ");
-			}
-		}*/
-
 		g_n_allocated_pointers++;
 		return true;
 	}else{
@@ -269,9 +259,7 @@ bool MEMMGR_dicotomic_delete(intptr_t key)
 	}
 
 	int pos=MEMMGR_dicotomic_search(key);
-	//printf("(pos:%i)",pos);
 	if(pos != KEY_NOT_FOUND){
-		//memcpy(&g_ds_pointer_array[pos],&g_ds_pointer_array[pos+1],(g_n_allocated_pointers-pos)*sizeof(PointerDS_Element));
 		for (int i = pos; i < g_n_allocated_pointers; i++){
 			g_ds_pointer_array[i] = g_ds_pointer_array[i+1];
 		}
@@ -300,11 +288,9 @@ void  MEMMGR_init(void)
 		g_n_free_pointers = MAX_MEMPOINTERS-1;
 		memset(&g_ds_pointer_array,0,sizeof(g_ds_pointer_array));
 
-
 		for(int i = 0; i < g_n_free_pointers; i++){
 			g_free_pointer_idx[i]=MAX_MEMPOINTERS-1-i;
 		}
-
 
 		LOG_LEVEL_INFO("******************************");
 		LOG_LEVEL_INFO("Memory management initialized!");
@@ -388,7 +374,7 @@ void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line)
 		//  memset  pointer
 		memset(pointer,0,size);
 	}else{
-		LOG_LEVEL_ERROR("Table full of pointers or not enought memory");
+		LOG_LEVEL_ERROR("Table full of pointers or not enough memory");
 	}
 
 
@@ -414,7 +400,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	void  *base_pointer;
 
 	if(pointer == NULL){
-		LOG_LEVEL_ERROR("ERROR:  passed  pointer  is  null  \"%s\"  at  row  %i.",filename,line);
+		LOG_LEVEL_ERROR("ERROR: passed pointer is null \"%s\" at row %i.",filename,line);
 		goto MEMMGR_free_continue;
 	}
 
@@ -426,13 +412,13 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  \"%s\"  at  line  %i.",filename,line);
+		LOG_LEVEL_ERROR("MEM ERROR: Bad crc pointer \"%s\" at line %i.",filename,line);
 		goto MEMMGR_free_continue;
 	}
 
 	if(preheap_allocat->offset_mempointer_table  <  0  ||  preheap_allocat->offset_mempointer_table  >=  MAX_MEMPOINTERS)
 	{
-		LOG_LEVEL_ERROR("MEM  ERROR:  bad  index  mem  table  in  file  \"%s\"  at  line  %i.",filename,line);
+		LOG_LEVEL_ERROR("MEM ERROR: bad index mem table in file \"%s\" at line %i.",filename,line);
 		goto MEMMGR_free_continue;
 	}
 
@@ -531,7 +517,7 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *absolute_filename,  int  
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  \"%s\"  at  line  %i.",filename,line);
+		LOG_LEVEL_ERROR("MEM ERROR: Bad crc pointer \"%s\" at line %i.",filename,line);
 		return;
 	}
 
