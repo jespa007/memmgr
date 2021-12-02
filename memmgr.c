@@ -414,7 +414,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	void  *base_pointer;
 
 	if(pointer == NULL){
-		LOG_LEVEL_ERROR("ERROR:  passed  pointer  is  null  \"%s\"  at  row  %i.",filename,line);
+		LOG_LEVEL_ERROR("ERROR:  passed  pointer  is  null  '%s'  at  row  %i.",filename,line);
 		goto MEMMGR_free_continue;
 	}
 
@@ -426,13 +426,13 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  \"%s\"  at  line  %i.",filename,line);
+		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  '%s'  at  line  %i.",filename,line);
 		goto MEMMGR_free_continue;
 	}
 
 	if(preheap_allocat->offset_mempointer_table  <  0  ||  preheap_allocat->offset_mempointer_table  >=  MAX_MEMPOINTERS)
 	{
-		LOG_LEVEL_ERROR("MEM  ERROR:  bad  index  mem  table  in  file  \"%s\"  at  line  %i.",filename,line);
+		LOG_LEVEL_ERROR("MEM  ERROR:  bad  index  mem  table  in  file  '%s'  at  line  %i.",filename,line);
 		goto MEMMGR_free_continue;
 	}
 
@@ -499,13 +499,13 @@ void  MEMMGR_print_error_on_wrong_deallocate_method(int  allocator, const char *
 	switch(allocator)
 	{
 	case  MALLOC_ALLOCATOR:
-		LOG_LEVEL_ERROR("ERROR:  g_allocated_pointer  at  filename  \"%s\"  line  %i  must  freed  with  function  free().",filename,  line);
+		LOG_LEVEL_ERROR("ERROR:  g_allocated_pointer  at  filename  '%s'  line  %i  must  freed  with  function  free().",filename,  line);
 		break;
 	case  NEW_ALLOCATOR:
-		LOG_LEVEL_ERROR("ERROR:  g_allocated_pointer  at  filename  \"%s\"  line  %i  must  freed  with  operator  delete.",filename,  line);
+		LOG_LEVEL_ERROR("ERROR:  g_allocated_pointer  at  filename  '%s'  line  %i  must  freed  with  operator  delete.",filename,  line);
 		break;
 	case  NEW_WITH_BRACETS_ALLOCATOR:
-		LOG_LEVEL_ERROR("ERROR:  g_allocated_pointer  at  filename  \"%s\"  line  %i  must  freed  with  operator  delete[].",filename,  line);
+		LOG_LEVEL_ERROR("ERROR:  g_allocated_pointer  at  filename  '%s'  line  %i  must  freed  with  operator  delete[].",filename,  line);
 		break;
 	}
 }
@@ -521,7 +521,7 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *absolute_filename,  int  
 
 	if(p == NULL)
 	{
-		LOG_LEVEL_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  \"%s\"  line  %i.",filename,  line);
+		LOG_LEVEL_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  '%s'  line  %i.",filename,  line);
 		return;
 	}
 
@@ -531,7 +531,7 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *absolute_filename,  int  
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  \"%s\"  at  line  %i.",filename,line);
+		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  '%s'  at  line  %i.",filename,line);
 		return;
 	}
 

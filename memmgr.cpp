@@ -125,7 +125,7 @@ void  operator  delete(void  *pointer) noexcept(true)
 
 	if(pointer == NULL)
 	{
-		LOG_LEVEL_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  \"%s\"  line  %i.",source_file,  source_line);
+		LOG_LEVEL_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  '%s'  line  %i.",source_file,  source_line);
 		return;
 	}
 
@@ -180,7 +180,7 @@ void  operator  delete[](void  *pointer) noexcept(true)
 
 	if(pointer==NULL)
 	{
-		LOG_LEVEL_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  \"%s\"  line  %i",source_file,  source_line);
+		LOG_LEVEL_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  '%s'  line  %i",source_file,  source_line);
 		return;
 	}
 
@@ -190,7 +190,7 @@ void  operator  delete[](void  *pointer) noexcept(true)
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  \"%s\"  at  line  %i.",source_file,source_line);
+		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  '%s'  at  line  %i.",source_file,source_line);
 		return;
 	}
 
