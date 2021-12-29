@@ -238,8 +238,8 @@ bool MEMMGR_dicotomic_insert(intptr_t key, int index)
 	if(idx_min >= 0){
 
 		if(idx_min < size){
-			for (int i = g_n_allocated_pointers-1; i >= idx_min; --i){
-				g_ds_pointer_array[i+1] = g_ds_pointer_array[i];
+			for (int i = g_n_allocated_pointers-1; i > idx_min; i--){
+				g_ds_pointer_array[i]=g_ds_pointer_array[i-1];
 			}
 		}
 		g_ds_pointer_array[idx_min].pointer = key;
@@ -271,8 +271,8 @@ bool MEMMGR_dicotomic_delete(intptr_t key)
 	int pos=MEMMGR_dicotomic_search(key);
 	//printf("(pos:%i)",pos);
 	if(pos != KEY_NOT_FOUND){
-		//memcpy(&g_ds_pointer_array[pos],&g_ds_pointer_array[pos+1],(g_n_allocated_pointers-pos)*sizeof(PointerDS_Element));
-		for (int i = pos; i < g_n_allocated_pointers; i++){
+
+		for (int i = pos; i < (g_n_allocated_pointers-1); i++){
 			g_ds_pointer_array[i] = g_ds_pointer_array[i+1];
 		}
 		g_ds_pointer_array[g_n_allocated_pointers-1].pointer=0;
