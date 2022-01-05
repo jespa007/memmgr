@@ -30,7 +30,7 @@ bool	MEMMGR_push_file_line(const  char  *absolute_filename,   int   line)
 	return true;
 }
 
-void*  operator  new(size_t  size)
+void*  operator  new(size_t  size) _THROW_BAD_ALLOC
 {
 	/*if(n_registered_file_line==0){
 		return malloc(size);
@@ -68,7 +68,7 @@ void*  operator  new(size_t  size)
 	return  ret_ptr;
 }
 //--------------------------------------------------------------------------------------------
-void*  operator  new[](size_t  size)
+void*  operator  new[](size_t  size) _THROW_BAD_ALLOC
 {
 	/*if(n_registered_file_line==0){
 		return malloc(size);
@@ -100,7 +100,7 @@ void*  operator  new[](size_t  size)
 
 }
 //--------------------------------------------------------------------------------------------
-void  operator  delete(void  *pointer) noexcept(true)
+void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 {
 	PointerPreHeapInfo *preheap_allocat=NULL;
 	PointerPostHeapInfo *postheap_allocat=NULL;
@@ -156,7 +156,7 @@ void  operator  delete(void  *pointer) noexcept(true)
 
 }
 //--------------------------------------------------------------------------------------------
-void  operator  delete[](void  *pointer) noexcept(true)
+void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 {
 	PointerPreHeapInfo *preheap_allocat=NULL;
 	PointerPostHeapInfo *postheap_allocat=NULL;

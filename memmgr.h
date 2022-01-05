@@ -3,7 +3,7 @@
 
 #define MEMMGR_MAJOR_VERSION 	1
 #define MEMMGR_MINOR_VERSION 	1
-#define MEMMGR_PACTH_VERSION 	4
+#define MEMMGR_PATCH_VERSION 	5
 
 #include	<stdlib.h>
 #include	<stdio.h>
@@ -35,6 +35,14 @@
 	//------------------------------------------------------------------------------------------------------------
 
 	#ifdef  __cplusplus
+
+#ifdef __APPLE__
+	#define _NO_EXCEPT_TRUE _NOEXCEPT
+#elif
+	#define _THROW_BAD_ALLOC
+	#define _NO_EXCEPT_TRUE noexcept(true)
+#endif
+
 		#include          	<vector>
 		#include 			<map>
 		#include            <new>
@@ -43,14 +51,12 @@
 		#include 			<sstream>
 		#include 			<regex>   // keep regex to avoid warnings error: invalid pure specifier (only ‘= 0’ ...
 
-
-
 		bool		MEMMGR_push_file_line(const char *absolute_filename,  int  line);
 
-		void*  		operator  new(size_t  size);
-		void*  		operator  new[](size_t  size);
-		void   		operator  delete(void  *p)  noexcept(true);
-		void   		operator  delete[](void  *p)  noexcept(true);
+		void*  		operator  new(size_t  size) _THROW_BAD_ALLOC;
+		void*  		operator  new[](size_t  size) _THROW_BAD_ALLOC;
+		void   		operator  delete(void  *p)  _NO_EXCEPT_TRUE;
+		void   		operator  delete[](void  *p)  _NO_EXCEPT_TRUE;
 
 
 

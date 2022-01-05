@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)
  
 project(memmgr)
 
@@ -49,13 +49,13 @@ add_executable(test_c
 	${PROJECT_SOURCE_DIR}/test_c.c
 	${PROJECT_SOURCE_DIR}/memmgr.c
 )
-target_link_libraries(test_c "-Wl,--no-as-needed" )
+target_link_libraries(test_c "-Wl" )
 
 add_executable(test_cpp
 	${PROJECT_SOURCE_DIR}/test_cpp.cpp
 	${PROJECT_SOURCE_DIR}/memmgr.cpp
 )
-target_link_libraries(test_cpp "-Wl,--no-as-needed" )
+target_link_libraries(test_cpp "-Wl" )
 
 
 
