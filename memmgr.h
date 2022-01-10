@@ -38,7 +38,7 @@
 
 #ifdef __APPLE__
 	#define _NO_EXCEPT_TRUE _NOEXCEPT
-#elif
+#else
 	#define _THROW_BAD_ALLOC
 	#define _NO_EXCEPT_TRUE noexcept(true)
 #endif

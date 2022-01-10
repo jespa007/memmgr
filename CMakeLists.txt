@@ -49,13 +49,13 @@ add_executable(test_c
 	${PROJECT_SOURCE_DIR}/test_c.c
 	${PROJECT_SOURCE_DIR}/memmgr.c
 )
-target_link_libraries(test_c "-Wl" )
+target_link_libraries(test_c)
 
 add_executable(test_cpp
 	${PROJECT_SOURCE_DIR}/test_cpp.cpp
 	${PROJECT_SOURCE_DIR}/memmgr.cpp
 )
-target_link_libraries(test_cpp "-Wl" )
+target_link_libraries(test_cpp)
 
 
 

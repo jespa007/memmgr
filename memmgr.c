@@ -206,13 +206,16 @@ int MEMMGR_dicotomic_search(intptr_t key)
 	return KEY_NOT_FOUND;
 }
 
-bool MEMMGR_dicotomic_insert(intptr_t key, int index)
-{
-	if(g_n_allocated_pointers==(MAX_MEMPOINTERS-2)){ // array full
+int MEMMGR_dicotomic_new_slot(intptr_t key, int index){
+
+	int idx_position_to_insert=KEY_NOT_FOUND;
+
+	if((g_n_allocated_pointers+1)>=(MAX_MEMPOINTERS)){ // array full
 		LOG_LEVEL_ERROR("DS Error full table");
-		return false;
+		return KEY_NOT_FOUND;
 	}
 
+	// reserve new slot
 	// PRE: array is already ordered
 	int size=g_n_allocated_pointers;
 	int idx_min = 0, idx_max = g_n_allocated_pointers - 1;
@@ -235,30 +238,32 @@ bool MEMMGR_dicotomic_insert(intptr_t key, int index)
 		}
 	}
 
-	if(idx_min >= 0){
+	// increment the new allocated slot
+	g_n_allocated_pointers++;
 
-		if(idx_min < size){
-			for (int i = g_n_allocated_pointers-1; i > idx_min; i--){
-				g_ds_pointer_array[i]=g_ds_pointer_array[i-1];
-			}
-		}
-		g_ds_pointer_array[idx_min].pointer = key;
-		g_ds_pointer_array[idx_min].index = index;
-
-		/*for(int i=0; i < (g_n_allocated_pointers-1);i++){
-			if(	g_ds_pointer_array[i].pointer > g_ds_pointer_array[i+1].pointer){ // mierda
-				int k=0;
-				k++;
-				LOG_LEVEL_ERROR("Cannot ");
-			}
-		}*/
-
-		g_n_allocated_pointers++;
-		return true;
-	}else{
-		LOG_LEVEL_ERROR("Cannot insert pointer");
+	// 1. move all elements...
+	for(int i=g_n_allocated_pointers-1;i>idx_min;i--){
+		g_ds_pointer_array[i]=g_ds_pointer_array[i-1];
 	}
-	return false;
+
+
+	return idx_min;
+}
+
+bool MEMMGR_dicotomic_insert(intptr_t key, int index)
+{
+
+	int idx_position=MEMMGR_dicotomic_new_slot(key,index);
+
+	if(idx_position ==KEY_NOT_FOUND){
+		return false;
+	}
+
+	g_ds_pointer_array[idx_position].pointer = key;
+	g_ds_pointer_array[idx_position].index = index;
+
+
+	return true;
 }
 
 bool MEMMGR_dicotomic_delete(intptr_t key)
