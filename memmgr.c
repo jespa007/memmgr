@@ -206,9 +206,9 @@ int MEMMGR_dicotomic_search(intptr_t key)
 	return KEY_NOT_FOUND;
 }
 
-int MEMMGR_dicotomic_new_slot(intptr_t key, int index){
+int MEMMGR_dicotomic_new_slot(intptr_t key){
 
-	int idx_position_to_insert=KEY_NOT_FOUND;
+	//int idx_position_to_insert=KEY_NOT_FOUND;
 
 	if((g_n_allocated_pointers+1)>=(MAX_MEMPOINTERS)){ // array full
 		LOG_LEVEL_ERROR("DS Error full table");
@@ -253,7 +253,7 @@ int MEMMGR_dicotomic_new_slot(intptr_t key, int index){
 bool MEMMGR_dicotomic_insert(intptr_t key, int index)
 {
 
-	int idx_position=MEMMGR_dicotomic_new_slot(key,index);
+	int idx_position=MEMMGR_dicotomic_new_slot(key);
 
 	if(idx_position ==KEY_NOT_FOUND){
 		return false;
