@@ -13,7 +13,10 @@
 #define	KEY_NOT_FOUND		-1
 
 #define LOG_LEVEL_INFO(s, ...)	print(stdout,s, ##__VA_ARGS__)
+#define LOG_LEVEL_INFOF(s)		LOG_LEVEL_INFO(s,NULL)
+
 #define LOG_LEVEL_ERROR(s, ...)	print(stderr,s, ##__VA_ARGS__)
+#define LOG_LEVEL_ERRORF(s)   	LOG_LEVEL_ERROR(s,NULL)
 
 //--------------------------------------------------------------------------------------------
 //  turn  off  macros...
@@ -211,7 +214,7 @@ int MEMMGR_dicotomic_new_slot(intptr_t key){
 	//int idx_position_to_insert=KEY_NOT_FOUND;
 
 	if((g_n_allocated_pointers+1)>=(MAX_MEMPOINTERS)){ // array full
-		LOG_LEVEL_ERROR("DS Error full table");
+		LOG_LEVEL_ERRORF("DS Error full table");
 		return KEY_NOT_FOUND;
 	}
 
@@ -269,7 +272,7 @@ bool MEMMGR_dicotomic_insert(intptr_t key, int index)
 bool MEMMGR_dicotomic_delete(intptr_t key)
 {
 	if(g_n_allocated_pointers==0){
-		LOG_LEVEL_ERROR("DS Error empty table");
+		LOG_LEVEL_ERRORF("DS Error empty table");
 		return false;
 	}
 
@@ -311,9 +314,9 @@ void  MEMMGR_init(void)
 		}
 
 
-		LOG_LEVEL_INFO("******************************");
-		LOG_LEVEL_INFO("Memory management initialized!");
-		LOG_LEVEL_INFO("******************************");
+		LOG_LEVEL_INFOF("******************************");
+		LOG_LEVEL_INFOF("Memory management initialized!");
+		LOG_LEVEL_INFOF("******************************");
 
 	}
 }
@@ -393,7 +396,7 @@ void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line)
 		//  memset  pointer
 		memset(pointer,0,size);
 	}else{
-		LOG_LEVEL_ERROR("Table full of pointers or not enought memory");
+		LOG_LEVEL_ERRORF("Table full of pointers or not enought memory");
 	}
 
 
@@ -451,7 +454,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	g_allocated_pointer[preheap_allocat->offset_mempointer_table]  =  NULL;
 
 	if(g_n_free_pointers>=(MAX_MEMPOINTERS-1)){
-		LOG_LEVEL_ERROR("reached max pointers!");
+		LOG_LEVEL_ERRORF("reached max pointers!");
 		goto MEMMGR_free_continue;
 	}
 
@@ -600,7 +603,7 @@ void  MEMMGR_print_status(void)
 	}
 	else
 	{
-		LOG_LEVEL_INFO("MEMRAM:ok.");
+		LOG_LEVEL_INFOF("MEMRAM:ok.");
 	}
 }
 
