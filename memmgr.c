@@ -403,6 +403,10 @@ void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line)
 	return pointer;
 }
 //--------------------------------------------------------------------------------------------
+void *MEMMGR_calloc(size_t  n_items,size_t  size_item,  const  char  *absolute_filename,  int  line){
+	return MEMMGR_malloc(n_items*size_item,absolute_filename,line);
+}
+//--------------------------------------------------------------------------------------------
 void  MEMMGR_free_c_pointer(void  *pointer){
 	free(pointer);
 }

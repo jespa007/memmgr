@@ -3,7 +3,7 @@
 
 #define MEMMGR_MAJOR_VERSION 	1
 #define MEMMGR_MINOR_VERSION 	1
-#define MEMMGR_PATCH_VERSION 	5
+#define MEMMGR_PATCH_VERSION 	6
 
 #include	<stdlib.h>
 #include	<stdio.h>
@@ -24,11 +24,13 @@
 #endif
 
 	void 		MEMMGR_print_status(void);
-	void        *MEMMGR_malloc(size_t  size,  const  char  *filename,  int  line);
-	void        *MEMMGR_realloc(void *ptr, size_t  size,  const  char  *filename,  int  line);
-	void        MEMMGR_free_from_malloc(void  *pointer,  const  char  *filename,  int  line);
-	void		MEMMGR_free_c_pointer(void  *pointer);
+	void        *MEMMGR_malloc(size_t  _size,  const  char  *_filename,  int  _line);
+	void        *MEMMGR_realloc(void *_ptr, size_t  _size,  const  char  *_filename,  int  _line);
+	void 		*MEMMGR_calloc(size_t  _n_items,size_t  _size_item,  const  char  *_filename,  int  _line);
+	void        MEMMGR_free_from_malloc(void  *_ptr,  const  char  *_filename,  int  _line);
+	void		MEMMGR_free_c_pointer(void  *_ptr);
 	#define  malloc(p)                                      	MEMMGR_malloc(p,__FILE__,  __LINE__)
+	#define  calloc(n,s)                                      	MEMMGR_calloc(n,s,__FILE__,  __LINE__)
 	#define  realloc(p,s)                                      	MEMMGR_realloc(p,s,__FILE__,  __LINE__)
 	#define  free(p)                                         	MEMMGR_free_from_malloc(p,__FILE__,  __LINE__)
 
@@ -51,12 +53,12 @@
 		#include 			<sstream>
 		#include 			<regex>   // keep regex to avoid warnings error: invalid pure specifier (only ‘= 0’ ...
 
-		bool		MEMMGR_push_file_line(const char *absolute_filename,  int  line);
+		bool		MEMMGR_push_file_line(const char *_filename,  int  _line);
 
-		void*  		operator  new(size_t  size) _THROW_BAD_ALLOC;
-		void*  		operator  new[](size_t  size) _THROW_BAD_ALLOC;
-		void   		operator  delete(void  *p)  _NO_EXCEPT_TRUE;
-		void   		operator  delete[](void  *p)  _NO_EXCEPT_TRUE;
+		void*  		operator  new(size_t  _size) _THROW_BAD_ALLOC;
+		void*  		operator  new[](size_t  _size) _THROW_BAD_ALLOC;
+		void   		operator  delete(void  *_ptr)  _NO_EXCEPT_TRUE;
+		void   		operator  delete[](void  *_ptr)  _NO_EXCEPT_TRUE;
 
 
 
