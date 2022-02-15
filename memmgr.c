@@ -13,7 +13,10 @@
 #define	KEY_NOT_FOUND		-1
 
 #define LOG_LEVEL_INFO(s, ...)	print(stdout,s, ##__VA_ARGS__)
+#define LOG_LEVEL_INFOF(s)		LOG_LEVEL_INFO(s,0)
+
 #define LOG_LEVEL_ERROR(s, ...)	print(stderr,s, ##__VA_ARGS__)
+#define LOG_LEVEL_ERRORF(s)		LOG_LEVEL_ERROR(s,0)
 
 //--------------------------------------------------------------------------------------------
 //  turn  off  macros...
@@ -207,7 +210,7 @@ int MEMMGR_dicotomic_search(intptr_t key)
 bool MEMMGR_dicotomic_insert(intptr_t key, int index)
 {
 	if(g_n_allocated_pointers==(MAX_MEMPOINTERS-2)){ // array full
-		LOG_LEVEL_ERROR("DS Error full table");
+		LOG_LEVEL_ERRORF("DS Error full table");
 		return false;
 	}
 
@@ -246,7 +249,7 @@ bool MEMMGR_dicotomic_insert(intptr_t key, int index)
 		g_n_allocated_pointers++;
 		return true;
 	}else{
-		LOG_LEVEL_ERROR("Cannot insert pointer");
+		LOG_LEVEL_ERRORF("Cannot insert pointer");
 	}
 	return false;
 }
@@ -254,7 +257,7 @@ bool MEMMGR_dicotomic_insert(intptr_t key, int index)
 bool MEMMGR_dicotomic_delete(intptr_t key)
 {
 	if(g_n_allocated_pointers==0){
-		LOG_LEVEL_ERROR("DS Error empty table");
+		LOG_LEVEL_ERRORF("DS Error empty table");
 		return false;
 	}
 
@@ -292,9 +295,9 @@ void  MEMMGR_init(void)
 			g_free_pointer_idx[i]=MAX_MEMPOINTERS-1-i;
 		}
 
-		LOG_LEVEL_INFO("******************************");
-		LOG_LEVEL_INFO("Memory management initialized!");
-		LOG_LEVEL_INFO("******************************");
+		LOG_LEVEL_INFOF("******************************");
+		LOG_LEVEL_INFOF("Memory management initialized!");
+		LOG_LEVEL_INFOF("******************************");
 
 	}
 }
@@ -374,7 +377,7 @@ void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line)
 		//  memset  pointer
 		memset(pointer,0,size);
 	}else{
-		LOG_LEVEL_ERROR("Table full of pointers or not enough memory");
+		LOG_LEVEL_ERRORF("Table full of pointers or not enough memory");
 	}
 
 
@@ -428,7 +431,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	g_allocated_pointer[preheap_allocat->offset_mempointer_table]  =  NULL;
 
 	if(g_n_free_pointers>=(MAX_MEMPOINTERS-1)){
-		LOG_LEVEL_ERROR("reached max pointers!");
+		LOG_LEVEL_ERRORF("reached max pointers!");
 		goto MEMMGR_free_continue;
 	}
 
@@ -577,7 +580,7 @@ void  MEMMGR_print_status(void)
 	}
 	else
 	{
-		LOG_LEVEL_INFO("MEMRAM:ok.");
+		LOG_LEVEL_INFOF("MEMRAM:ok.");
 	}
 }
 

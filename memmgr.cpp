@@ -22,7 +22,7 @@ bool	MEMMGR_push_file_line(const  char  *absolute_filename,   int   line)
 	}
 	else
 	{
-		LOG_LEVEL_INFO("reached max stacked files!");
+		LOG_LEVEL_INFOF("reached max stacked files!");
 		//return false;
 	}
 
