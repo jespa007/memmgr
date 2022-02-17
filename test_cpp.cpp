@@ -95,8 +95,6 @@ int main(int argc, char *argv[]){
 		delete thread_test[i];
 	}
 
-	MEMMGR_print_status();
-
 	return 0;
 }
 

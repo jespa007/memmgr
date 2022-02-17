@@ -100,8 +100,8 @@ static PointerDS_Element g_ds_pointer_array[MAX_MEMPOINTERS]; // the same alloca
 static 	pthread_mutex_t mutex_main;
 
 //--------------------------------------------------------------------------------------------
-void  MEMMGR_print_status(void);
-void  MEMMGR_free_all_allocated_pointers(void);
+static void  MEMMGR_print_status(void);
+static void  MEMMGR_free_all_allocated_pointers(void);
 
 //--------------------------------------------------------------------------------------------
 // PATH UTILS
@@ -317,6 +317,8 @@ void  MEMMGR_init(void)
 		LOG_LEVEL_INFOF("******************************");
 		LOG_LEVEL_INFOF("Memory management initialized!");
 		LOG_LEVEL_INFOF("******************************");
+
+		atexit(MEMMGR_print_status);
 
 	}
 }

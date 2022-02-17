@@ -73,8 +73,6 @@ int main(int argc, char *argv[]){
 		pthread_join(thread_test[i], NULL);
 	}
 
-	MEMMGR_print_status();
-
 	return 0;
 }
 
