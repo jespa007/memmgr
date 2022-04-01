@@ -38,6 +38,14 @@ void * allocate_loop(void *vargp){
 			arr_c[i]=i;
 		}
 
+		if(rand()%2==0){
+			arr_c=(int *)realloc(arr_c,(ITERATIONS>>1)*sizeof(int));
+			for(int i=0;i<(ITERATIONS>>1);i++){
+				arr_c[i]=(ITERATIONS>>1)-1;
+			}
+
+		}
+
 		free(arr_c);
 		free(size_c);
 
@@ -60,13 +68,17 @@ int main(int argc, char *argv[]){
 	srand(time(NULL));
 	pthread_t thread_test[N_TEST_THREAD]={0};// (allocate_loop);
 
-	printf("testing allocation multithread...\n");
+	printf("testing allocation multithread C\n");
 
 	for(unsigned i=0; i < N_TEST_THREAD; i++){
 		pthread_create(&thread_test[i],NULL,allocate_loop,NULL);
 	}
 
+	printf("Press any key to stop...\n");
+
 	getchar();
+
+	printf("exiting...\n");
 
 	exit_thread=1;
 	for(unsigned i=0; i < N_TEST_THREAD; i++){

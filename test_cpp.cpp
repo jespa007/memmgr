@@ -33,6 +33,13 @@ void allocate_loop(){
 			arr_c[i]=i;
 		}
 
+		if(rand()%2==0){
+			arr_c=(int *)realloc(arr_c,(ITERATIONS>>1)*sizeof(int));
+			for(int i=0;i<(ITERATIONS>>1);i++){
+				arr_c[i]=(ITERATIONS>>1)-1;
+			}
+		}
+
 		free(arr_c);
 		free(size_c);
 
@@ -69,28 +76,20 @@ int main(int argc, char *argv[]){
 	srand(time(NULL));
 	std::thread *thread_test[N_TEST_THREAD]={0};// (allocate_loop);
 
-	printf("testing allocation multithread...\n");
-
+	printf("testing allocation multithread CPP\n");
 	for(unsigned i=0; i < N_TEST_THREAD; i++){
 		thread_test[i]=new std::thread(allocate_loop);
 	}
 
-
-
-
-
-	// main thread allocate
-	/*for(;;){
-
-		if(getchar()){
-			break;
-		}
-	}*/
+	printf("Press any key to stop...\n");
 
 	getchar();
 
+	printf("exiting...\n");
+
+	exit_thread=true;
+
 	for(unsigned i=0; i < N_TEST_THREAD; i++){
-		exit_thread=true;
 		thread_test[i]->join();
 		delete thread_test[i];
 	}

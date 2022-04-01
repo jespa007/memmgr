@@ -1,6 +1,8 @@
 #include	"memmgr.h"
 
 
+//#define __MEMMGR_DICOTOMIC_SEARCH__
+
 //--------------------------------------------------------------------------------------------
 // DEFINES
 #define	MAX_MEMPOINTERS					80000
@@ -64,10 +66,12 @@ typedef  struct{
 	int  		line;
 }InfoAllocatedPointer;
 
+#ifdef __MEMMGR_DICOTOMIC_SEARCH__
 typedef  struct{
 	intptr_t pointer; //this is the element to  be ordered.
 	int index;
 }PointerDS_Element;
+#endif
 
 typedef  struct{
 	int		type_allocator;
@@ -86,22 +90,26 @@ typedef  struct{
 // GLOBAL VARS
 
 static int	g_n_allocated_bytes  =  0;
-static int	g_n_allocated_pointers  =  0;
 static bool	g_memmgr_was_init  =  false;
 
-static void	*g_allocated_pointer[MAX_MEMPOINTERS];
-static int 	g_free_pointer_idx[MAX_MEMPOINTERS]={0};
-static int 	g_n_free_pointers=0;
+static void	*g_allocated_pointer[MAX_MEMPOINTERS]={0};
+static int 	g_n_allocated_pointers=0;
+
+static int 	g_idx_free_pointer_slots[MAX_MEMPOINTERS]={0};
+static int 	g_n_free_pointer_slots=0;
+
+
+
+
+#ifdef __MEMMGR_DICOTOMIC_SEARCH__
 static PointerDS_Element g_ds_pointer_array[MAX_MEMPOINTERS]; // the same allocatedPointers it will have.
-
-
-
+#endif
 
 static 	pthread_mutex_t mutex_main;
 
 //--------------------------------------------------------------------------------------------
 static void  MEMMGR_print_status(void);
-static void  MEMMGR_free_all_allocated_pointers(void);
+void  MEMMGR_free_all_allocated_pointers(void);
 
 //--------------------------------------------------------------------------------------------
 // PATH UTILS
@@ -183,7 +191,7 @@ void  print(FILE *std, const  char  *string_text, ...) {
 
 //--------------------------------------------------------------------------------------------
 // DICOTOMIC
-
+#ifdef __MEMMGR_DICOTOMIC_SEARCH__
 int MEMMGR_dicotomic_search(intptr_t key)
 {
 	int idx_min=0;
@@ -293,6 +301,7 @@ bool MEMMGR_dicotomic_delete(intptr_t key)
 	return false;
 
 }
+#endif
 //--------------------------------------------------------------------------------------------
 // MEMMGR Functions
 void  MEMMGR_init(void)
@@ -300,35 +309,41 @@ void  MEMMGR_init(void)
 
 	if(!g_memmgr_was_init)
 	{
+		// init allocated pointers data
 		g_n_allocated_bytes  =  0;
-		memset(g_allocated_pointer,0,sizeof(g_allocated_pointer));
 		g_n_allocated_pointers  =  0;
+		memset(g_allocated_pointer,0,sizeof(g_allocated_pointer));
 
-		g_memmgr_was_init  =  true;
-		g_n_free_pointers = MAX_MEMPOINTERS-1;
-		memset(&g_ds_pointer_array,0,sizeof(g_ds_pointer_array));
+		// init free pointers data
+		g_n_free_pointer_slots = MAX_MEMPOINTERS-1;
 
-
-		for(int i = 0; i < g_n_free_pointers; i++){
-			g_free_pointer_idx[i]=MAX_MEMPOINTERS-1-i;
+		for(int i = 0; i < g_n_free_pointer_slots; i++){
+			g_idx_free_pointer_slots[i]=MAX_MEMPOINTERS-1-i;
 		}
 
+#ifdef __MEMMGR_DICOTOMIC_SEARCH__
+		memset(&g_ds_pointer_array,0,sizeof(g_ds_pointer_array));
+#endif
+
+
+		atexit(MEMMGR_print_status);
+		g_memmgr_was_init  =  true;
 
 		LOG_LEVEL_INFOF("******************************");
 		LOG_LEVEL_INFOF("Memory management initialized!");
 		LOG_LEVEL_INFOF("******************************");
 
-		atexit(MEMMGR_print_status);
-
 	}
 }
 
+/*
 bool  MEMMGR_is_pointer_registered(intptr_t pointer)
 {
 
-	pthread_mutex_lock(&mutex_main);
+	//pthread_mutex_lock(&mutex_main);
 	bool ok=false;
 
+#ifdef __MEMMGR_DICOTOMIC_SEARCH__
 	int pos = MEMMGR_dicotomic_search(pointer);
 
 	if(pos >=0){
@@ -336,16 +351,24 @@ bool  MEMMGR_is_pointer_registered(intptr_t pointer)
 			ok=true;
 		}
 	}
+#else
+	for(int i=0; i < g_n_allocated_pointers; i++){
+		if(g_n_allocated_pointers==pointer){
+			ok=true;
+			break;
+		}
+	}
+#endif
 
-	pthread_mutex_unlock(&mutex_main);
+	//pthread_mutex_unlock(&mutex_main);
 
 	return ok;
-}
+}*/
 //--------------------------------------------------------------------------------------------
 int  MEMMGR_get_free_cell_memptr_table(void)
 {
-	if(g_n_free_pointers > 0){
-		return g_free_pointer_idx[g_n_free_pointers];
+	if(g_n_free_pointer_slots > 0){
+		return g_idx_free_pointer_slots[g_n_free_pointer_slots];
 	}
 	return KEY_NOT_FOUND; // no memory free...
 }
@@ -353,6 +376,15 @@ int  MEMMGR_get_free_cell_memptr_table(void)
 //--------------------------------------------------------------------------------------------
 void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line)
 {
+	if(size==0){
+		LOG_LEVEL_ERROR("[%s:%i] Trying to allocate memory as size %i bytes",absolute_filename,line);
+		return NULL;
+	}
+
+	if((g_n_allocated_pointers)>=(MAX_MEMPOINTERS)){ // array full
+		LOG_LEVEL_ERRORF("Memmanager: Error full table");
+		return NULL;
+	}
 
 	pthread_mutex_lock(&mutex_main);
 
@@ -388,12 +420,17 @@ void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line)
 
 		pointer  =  ((char  *)heap_allocat+sizeof(PointerPreHeapInfo));
 
+#ifdef __MEMMGR_DICOTOMIC_SEARCH__
 		//------------------------------------------------------------
 		// insert to get pointer faster through dicotomic search...
 		MEMMGR_dicotomic_insert((intptr_t)heap_allocat, index);
 		//------------------------------------------------------------
+#else
+		// increment the new allocated slot
+		g_n_allocated_pointers++;
+#endif
 
-		g_n_free_pointers--;
+		g_n_free_pointer_slots--;
 
 		//  memset  pointer
 		memset(pointer,0,size);
@@ -419,6 +456,10 @@ void  MEMMGR_free_c_pointer(void  *pointer){
 //--------------------------------------------------------------------------------------------
 void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 {
+	if(g_n_allocated_pointers==0){
+		LOG_LEVEL_ERRORF("Error empty table");
+		return;
+	}
 
 	//std::lock_guard<std::mutex> lg(mutex_main);
 	pthread_mutex_lock(&mutex_main);
@@ -436,6 +477,12 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	//  Getheaders...
 	base_pointer  =  preheap_allocat    =  GET_PREHEADER(pointer);
 	postheap_allocat  =  GET_POSTHEADER(pointer);
+
+/*	if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
+	{
+		LOG_LEVEL_ERROR("(%s:%i): allocated_pointer NOT REGISTERED OR POSSIBLE MEMORY CORRUPTION?!?!",filename,  line);
+		return;
+	}*/
 
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
@@ -455,20 +502,26 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	//  Mark  freed...
 	g_allocated_pointer[preheap_allocat->offset_mempointer_table]  =  NULL;
 
-	if(g_n_free_pointers>=(MAX_MEMPOINTERS-1)){
+	if(g_n_free_pointer_slots>=(MAX_MEMPOINTERS-1)){
 		LOG_LEVEL_ERRORF("reached max pointers!");
 		goto MEMMGR_free_continue;
 	}
 
-	g_n_free_pointers++;
-	g_free_pointer_idx[g_n_free_pointers] = preheap_allocat->offset_mempointer_table;
+	g_n_free_pointer_slots++;
+	g_idx_free_pointer_slots[g_n_free_pointer_slots] = preheap_allocat->offset_mempointer_table;
 
+#ifdef __MEMMGR_DICOTOMIC_SEARCH__
 	//-----------------------------------------------------------------
 	// DS delete element ...
 	if(MEMMGR_dicotomic_delete((intptr_t)base_pointer)){
+#else
+		g_n_allocated_pointers--;
+#endif
 		g_n_allocated_bytes-=preheap_allocat->size;
 		free(base_pointer);
+#ifdef __MEMMGR_DICOTOMIC_SEARCH__
 	}
+#endif
 
 MEMMGR_free_continue:
 
@@ -483,9 +536,7 @@ void *MEMMGR_realloc(void *ptr, size_t size,  const  char  *absolute_filename,  
 		return MEMMGR_malloc(size, absolute_filename, line);
 	}
 
-
 	PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(ptr);
-
 
 	if ((size_t)pre_head->size >= size) {
 		// We have enough space. Could free some once we implement split.
@@ -561,7 +612,6 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *absolute_filename,  int  
 //----------------------------------------------------------------------------------------
 void  MEMMGR_free_all_allocated_pointers(void)
 {
-
 	void *p;
 
 	for(int i = 0; i < MAX_MEMPOINTERS; i++)

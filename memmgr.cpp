@@ -70,11 +70,12 @@ void*  operator  new(size_t  size) _THROW_BAD_ALLOC
 //--------------------------------------------------------------------------------------------
 void*  operator  new[](size_t  size) _THROW_BAD_ALLOC
 {
+	if(size==0){
+		throw std::bad_alloc();
+	}
 	/*if(n_registered_file_line==0){
 		return malloc(size);
 	}*/
-
-
 	char source_file[MEMMGR_MAX_FILENAME_LENGTH]={"??"};
 	int source_line=0;
 
@@ -132,12 +133,12 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 	preheap_allocat  =  GET_PREHEADER(pointer);
 	postheap_allocat  =  GET_POSTHEADER(pointer);
 
-	if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
+	/*if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
 	{
 		LOG_LEVEL_ERROR("(%s:%i): allocated_pointer NOT REGISTERED OR POSSIBLE MEMORY CORRUPTION?!?!",source_file,  source_line);
 		return;
 	}
-
+*/
 
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)
 	{
@@ -194,11 +195,11 @@ void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 		return;
 	}
 
-	if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
+	/*if(!MEMMGR_is_pointer_registered((intptr_t)((char *)pointer-sizeof(PointerPreHeapInfo))))
 	{
 		LOG_LEVEL_ERROR("(%s:%i): allocated_pointer NOT REGISTERED WITH MALLOC OR NEW!",source_file,  source_line);
 		return;
-	}
+	}*/
 
 	if(preheap_allocat->type_allocator  !=  NEW_WITH_BRACETS_ALLOCATOR)
 	{
