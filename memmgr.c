@@ -1,7 +1,6 @@
 #include	"memmgr.h"
 
 
-//#define __MEMMGR_DICOTOMIC_SEARCH__
 
 //--------------------------------------------------------------------------------------------
 // DEFINES
@@ -66,13 +65,6 @@ typedef  struct{
 	int  		line;
 }InfoAllocatedPointer;
 
-#ifdef __MEMMGR_DICOTOMIC_SEARCH__
-typedef  struct{
-	intptr_t pointer; //this is the element to  be ordered.
-	int index;
-}PointerDS_Element;
-#endif
-
 typedef  struct{
 	int		type_allocator;
 	int		offset_mempointer_table;
@@ -97,13 +89,6 @@ static int 	g_n_allocated_pointers=0;
 
 static int 	g_idx_free_pointer_slots[MAX_MEMPOINTERS]={0};
 static int 	g_n_free_pointer_slots=0;
-
-
-
-
-#ifdef __MEMMGR_DICOTOMIC_SEARCH__
-static PointerDS_Element g_ds_pointer_array[MAX_MEMPOINTERS]; // the same allocatedPointers it will have.
-#endif
 
 static 	pthread_mutex_t mutex_main;
 
@@ -190,119 +175,6 @@ void  print(FILE *std, const  char  *string_text, ...) {
 #endif
 
 //--------------------------------------------------------------------------------------------
-// DICOTOMIC
-#ifdef __MEMMGR_DICOTOMIC_SEARCH__
-int MEMMGR_dicotomic_search(intptr_t key)
-{
-	int idx_min=0;
-	int idx_max=g_n_allocated_pointers-1;
-	// continue searching while [imin,imax] is not empty
-	while (idx_max >= idx_min)
-	{
-		// calculate the midpoint for roughly equal partition
-		int idx_mid = (idx_min + idx_max ) >> 1;
-		if(g_ds_pointer_array[idx_mid].pointer == key){
-			// key found at index idx_mid
-			return idx_mid;
-		// determine which subarray to search
-		}else if (g_ds_pointer_array[idx_mid].pointer < key){
-			// change min index to search upper subarray
-			idx_min = idx_mid + 1;
-		}else{
-			// change max index to search lower subarray
-			idx_max = idx_mid - 1;
-		}
-	}
-	// key was not found
-	return KEY_NOT_FOUND;
-}
-
-int MEMMGR_dicotomic_new_slot(intptr_t key){
-
-	//int idx_position_to_insert=KEY_NOT_FOUND;
-
-	if((g_n_allocated_pointers+1)>=(MAX_MEMPOINTERS)){ // array full
-		LOG_LEVEL_ERRORF("DS Error full table");
-		return KEY_NOT_FOUND;
-	}
-
-	// reserve new slot
-	// PRE: array is already ordered
-	int size=g_n_allocated_pointers;
-	int idx_min = 0, idx_max = g_n_allocated_pointers - 1;
-
-	if(size > 0){
-
-		if (key > g_ds_pointer_array[idx_max].pointer){
-		  idx_min=size;
-		}
-		else{
-		  while (idx_max > idx_min) {
-			int idx_mid = (idx_min + idx_max) >> 1;
-			if (g_ds_pointer_array[idx_mid].pointer > key) {
-				idx_max = idx_mid;
-			}
-			else{
-				idx_min = idx_mid + 1;
-			}
-		  }
-		}
-	}
-
-	// increment the new allocated slot
-	g_n_allocated_pointers++;
-
-	// 1. move all elements...
-	for(int i=g_n_allocated_pointers-1;i>idx_min;i--){
-		g_ds_pointer_array[i]=g_ds_pointer_array[i-1];
-	}
-
-
-	return idx_min;
-}
-
-bool MEMMGR_dicotomic_insert(intptr_t key, int index)
-{
-
-	int idx_position=MEMMGR_dicotomic_new_slot(key);
-
-	if(idx_position ==KEY_NOT_FOUND){
-		return false;
-	}
-
-	g_ds_pointer_array[idx_position].pointer = key;
-	g_ds_pointer_array[idx_position].index = index;
-
-
-	return true;
-}
-
-bool MEMMGR_dicotomic_delete(intptr_t key)
-{
-	if(g_n_allocated_pointers==0){
-		LOG_LEVEL_ERRORF("DS Error empty table");
-		return false;
-	}
-
-	int pos=MEMMGR_dicotomic_search(key);
-	//printf("(pos:%i)",pos);
-	if(pos != KEY_NOT_FOUND){
-
-		for (int i = pos; i < (g_n_allocated_pointers-1); i++){
-			g_ds_pointer_array[i] = g_ds_pointer_array[i+1];
-		}
-		g_ds_pointer_array[g_n_allocated_pointers-1].pointer=0;
-		g_ds_pointer_array[g_n_allocated_pointers-1].index=0;
-		g_n_allocated_pointers--;
-		return true;
-	}else{
-		LOG_LEVEL_ERROR("Pointer %p not found (Corrupt memory?!?!))",(void *)key);
-	}
-	return false;
-
-}
-#endif
-//--------------------------------------------------------------------------------------------
 // MEMMGR Functions
 void  MEMMGR_init(void)
 {
@@ -321,11 +193,6 @@ void  MEMMGR_init(void)
 			g_idx_free_pointer_slots[i]=MAX_MEMPOINTERS-1-i;
 		}
 
-#ifdef __MEMMGR_DICOTOMIC_SEARCH__
-		memset(&g_ds_pointer_array,0,sizeof(g_ds_pointer_array));
-#endif
-
-
 		atexit(MEMMGR_print_status);
 		g_memmgr_was_init  =  true;
 
@@ -335,35 +202,6 @@ void  MEMMGR_init(void)
 
 	}
 }
-
-/*
-bool  MEMMGR_is_pointer_registered(intptr_t pointer)
-{
-
-	//pthread_mutex_lock(&mutex_main);
-	bool ok=false;
-
-#ifdef __MEMMGR_DICOTOMIC_SEARCH__
-	int pos = MEMMGR_dicotomic_search(pointer);
-
-	if(pos >=0){
-		if(g_ds_pointer_array[pos].pointer == pointer){
-			ok=true;
-		}
-	}
-#else
-	for(int i=0; i < g_n_allocated_pointers; i++){
-		if(g_n_allocated_pointers==pointer){
-			ok=true;
-			break;
-		}
-	}
-#endif
-
-	//pthread_mutex_unlock(&mutex_main);
-
-	return ok;
-}*/
 //--------------------------------------------------------------------------------------------
 int  MEMMGR_get_free_cell_memptr_table(void)
 {
@@ -420,16 +258,8 @@ void 	*MEMMGR_malloc(size_t  size,  const  char  *absolute_filename,  int  line)
 
 		pointer  =  ((char  *)heap_allocat+sizeof(PointerPreHeapInfo));
 
-#ifdef __MEMMGR_DICOTOMIC_SEARCH__
-		//------------------------------------------------------------
-		// insert to get pointer faster through dicotomic search...
-		MEMMGR_dicotomic_insert((intptr_t)heap_allocat, index);
-		//------------------------------------------------------------
-#else
 		// increment the new allocated slot
 		g_n_allocated_pointers++;
-#endif
-
 		g_n_free_pointer_slots--;
 
 		//  memset  pointer
@@ -509,19 +339,9 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 
 	g_n_free_pointer_slots++;
 	g_idx_free_pointer_slots[g_n_free_pointer_slots] = preheap_allocat->offset_mempointer_table;
-
-#ifdef __MEMMGR_DICOTOMIC_SEARCH__
-	//-----------------------------------------------------------------
-	// DS delete element ...
-	if(MEMMGR_dicotomic_delete((intptr_t)base_pointer)){
-#else
-		g_n_allocated_pointers--;
-#endif
-		g_n_allocated_bytes-=preheap_allocat->size;
-		free(base_pointer);
-#ifdef __MEMMGR_DICOTOMIC_SEARCH__
-	}
-#endif
+	g_n_allocated_pointers--;
+	g_n_allocated_bytes-=preheap_allocat->size;
+	free(base_pointer);
 
 MEMMGR_free_continue:
 
