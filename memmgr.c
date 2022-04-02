@@ -12,14 +12,15 @@
 #define GET_POSTHEADER(p)	((PointerPostHeapInfo  *)((char  *)p+(GET_SIZE_PTR(p))))
 #define	KEY_NOT_FOUND		-1
 
-#define LOG_LEVEL_INFO(s, ...)	print(stdout,s, ##__VA_ARGS__)
-#define LOG_LEVEL_INFOF(s)		LOG_LEVEL_INFO(s,NULL)
+#define LOG_LEVEL_INFO(file,line,s, ...)	print_log(LOG_TYPE_INFO,file,line,s, ##__VA_ARGS__)
+#define LOG_LEVEL_INFOF(file,line,s)		LOG_LEVEL_INFO(file,line,s,NULL)
 
-#define LOG_LEVEL_ERROR(s, ...)	print(stderr,s, ##__VA_ARGS__)
-#define LOG_LEVEL_ERRORF(s)   	LOG_LEVEL_ERROR(s,NULL)
+#define LOG_LEVEL_WARNING(file,line,s, ...)	print_log(LOG_TYPE_WARNING,file,line,s, ##__VA_ARGS__)
+#define LOG_LEVEL_WARNINGF(file,line,s)   	LOG_LEVEL_WARNING(file,line,s,NULL)
 
-#define LOG_LEVEL_WARNING(s, ...)	print(stderr,s, ##__VA_ARGS__)
-#define LOG_LEVEL_WARNINGF(s)   	LOG_LEVEL_WARNING(s,NULL)
+#define LOG_LEVEL_ERROR(file,line,s, ...)	print_log(LOG_TYPE_ERROR,file,line,s, ##__VA_ARGS__)
+#define LOG_LEVEL_ERRORF(file,line,s)   	LOG_LEVEL_ERROR(file,line,s,NULL)
+
 
 //--------------------------------------------------------------------------------------------
 //  turn  off  macros...
@@ -56,6 +57,12 @@ typedef enum{
 	NEW_WITH_BRACETS_ALLOCATOR,
 	MAX_ALLOCATE_TYPES
 }ALLOCATOR_TYPE;
+
+typedef enum{
+	LOG_TYPE_INFO=0
+	,LOG_TYPE_WARNING
+	,LOG_TYPE_ERROR
+}LogType;
 
 //--------------------------------------------------------------------------------------------
 // STRUCTS
@@ -144,9 +151,13 @@ void MEMMGR_set_color_terminal(FILE *std_type, int attr, int fg, int bg)
 #ifndef  __GNUC__
 #pragma  managed(push,  off)
 #endif
-void  print(FILE *std, const  char  *string_text, ...) {
+void  print_log(LogType _log_type, const char *_file, int _line, const  char  *string_text, ...) {
 
-	FILE *std_type = stderr;
+	char  filename[MEMMGR_MAX_FILENAME_LENGTH];
+	MEMMGR_get_filename(filename,  _file);
+
+	FILE *std_type = stdout;
+	const char *log_type_str="MEMINF";
 	char  text[4096] = { 0 };
 	va_list  ap;
 
@@ -154,13 +165,27 @@ void  print(FILE *std, const  char  *string_text, ...) {
 	vsprintf(text,  string_text,  ap);
 	va_end(ap);
 
+	switch(_log_type){
+	case LOG_TYPE_INFO:
+		break;
+	case LOG_TYPE_WARNING:
+		log_type_str="MEMWRN";
+		std_type = stderr;
+		break;
+	case LOG_TYPE_ERROR:
+		log_type_str="MEMERR";
+		std_type = stderr;
+		break;
+
+	}
+
 	//  Results  Are  Stored  In  Text
 #ifdef _WIN32
   SetConsoleTextAttribute(GetStdHandle(std==stderr?STD_ERROR_HANDLE:STD_OUTPUT_HANDLE), std==stderr?FOREGROUND_RED:(FOREGROUND_RED   | FOREGROUND_GREEN | FOREGROUND_BLUE)   | FOREGROUND_INTENSITY);
 #else // ansi color
-  MEMMGR_set_color_terminal(std_type, TERM_CMD_BRIGHT, std==stderr?TERM_COLOR_RED:TERM_COLOR_WHITE, TERM_COLOR_BLACK);
+  MEMMGR_set_color_terminal(std_type, TERM_CMD_BRIGHT, _log_type==LOG_TYPE_ERROR?TERM_COLOR_RED:_log_type==LOG_TYPE_WARNING?TERM_COLOR_YELLOW:TERM_COLOR_WHITE, TERM_COLOR_BLACK);
 #endif
-	fprintf(std_type, "%s", text);
+	fprintf(std_type, "[ %27s:%04i - %3s]=%s",filename,_line,log_type_str, text);
 #ifdef _WIN32
 	SetConsoleTextAttribute(GetStdHandle(std==stderr?STD_ERROR_HANDLE:STD_OUTPUT_HANDLE), FOREGROUND_RED   | FOREGROUND_GREEN | FOREGROUND_BLUE);
 #else // ansi color
@@ -177,118 +202,6 @@ void  print(FILE *std, const  char  *string_text, ...) {
 #endif
 
 //--------------------------------------------------------------------------------------------
-// DICOTOMIC
-/*
-int MEMMGR_dicotomic_search(intptr_t key)
-{
-	int idx_min=0;
-	int idx_max=g_n_allocated_pointers-1;
-	// continue searching while [imin,imax] is not empty
-	while (idx_max >= idx_min)
-	{
-		// calculate the midpoint for roughly equal partition
-		int idx_mid = (idx_min + idx_max ) >> 1;
-		if(g_ds_pointer_array[idx_mid].pointer == key){
-			// key found at index idx_mid
-			return idx_mid;
-		// determine which subarray to search
-		}else if (g_ds_pointer_array[idx_mid].pointer < key){
-			// change min index to search upper subarray
-			idx_min = idx_mid + 1;
-		}else{
-			// change max index to search lower subarray
-			idx_max = idx_mid - 1;
-		}
-	}
-	// key was not found
-	return KEY_NOT_FOUND;
-}
-
-int MEMMGR_dicotomic_new_slot(intptr_t key){
-
-	//int idx_position_to_insert=KEY_NOT_FOUND;
-
-	if((g_n_allocated_pointers+1)>=(MAX_MEMPOINTERS)){ // array full
-		LOG_LEVEL_ERRORF("DS Error full table");
-		return KEY_NOT_FOUND;
-	}
-
-	// reserve new slot
-	// PRE: array is already ordered
-	int size=g_n_allocated_pointers;
-	int idx_min = 0, idx_max = g_n_allocated_pointers - 1;
-
-	if(size > 0){
-
-		if (key > g_ds_pointer_array[idx_max].pointer){
-		  idx_min=size;
-		}
-		else{
-		  while (idx_max > idx_min) {
-			int idx_mid = (idx_min + idx_max) >> 1;
-			if (g_ds_pointer_array[idx_mid].pointer > key) {
-				idx_max = idx_mid;
-			}
-			else{
-				idx_min = idx_mid + 1;
-			}
-		  }
-		}
-	}
-
-	// increment the new allocated slot
-	g_n_allocated_pointers++;
-
-	// 1. move all elements...
-	for(int i=g_n_allocated_pointers-1;i>idx_min;i--){
-		g_ds_pointer_array[i]=g_ds_pointer_array[i-1];
-	}
-
-
-	return idx_min;
-}
-
-bool MEMMGR_dicotomic_insert(intptr_t key, int index)
-{
-
-	int idx_position=MEMMGR_dicotomic_new_slot(key);
-
-	if(idx_position ==KEY_NOT_FOUND){
-		return false;
-	}
-
-	g_ds_pointer_array[idx_position].pointer = key;
-	g_ds_pointer_array[idx_position].index = index;
-
-
-	return true;
-}
-
-bool MEMMGR_dicotomic_delete(intptr_t key)
-{
-	if(g_n_allocated_pointers==0){
-		LOG_LEVEL_ERRORF("DS Error empty table");
-		return false;
-	}
-
-	int pos=MEMMGR_dicotomic_search(key);
-	//printf("(pos:%i)",pos);
-	if(pos != KEY_NOT_FOUND){
-
-		for (int i = pos; i < (g_n_allocated_pointers-1); i++){
-			g_ds_pointer_array[i] = g_ds_pointer_array[i+1];
-		}
-		g_ds_pointer_array[g_n_allocated_pointers-1].pointer=0;
-		g_ds_pointer_array[g_n_allocated_pointers-1].index=0;
-		g_n_allocated_pointers--;
-		return true;
-	}else{
-		LOG_LEVEL_ERROR("Pointer %p not found (Corrupt memory?!?!))",(void *)key);
-	}
-	return false;
-
-}*/
-//--------------------------------------------------------------------------------------------
 // MEMMGR Functions
 void  MEMMGR_init(void)
 {
@@ -304,9 +217,9 @@ void  MEMMGR_init(void)
 			g_free_pointer_idx[i]=MAX_MEMPOINTERS-1-i;
 		}
 
-		LOG_LEVEL_INFOF("******************************");
-		LOG_LEVEL_INFOF("Memory management initialized!");
-		LOG_LEVEL_INFOF("******************************");
+		LOG_LEVEL_INFOF(__FILE__,__LINE__,"******************************");
+		LOG_LEVEL_INFOF(__FILE__,__LINE__,"Memory management initialized!");
+		LOG_LEVEL_INFOF(__FILE__,__LINE__,"******************************");
 
 		atexit(MEMMGR_print_status);
 
@@ -326,9 +239,11 @@ int  MEMMGR_get_free_cell_memptr_table(void)
 //--------------------------------------------------------------------------------------------
 void 	*MEMMGR_malloc(size_t  _size,  const  char  *_absolute_filename,  int  _line)
 {
+	char  filename[MEMMGR_MAX_FILENAME_LENGTH];
+	MEMMGR_get_filename(filename,  _absolute_filename);
 	// do not register
 	if(_size == 0){
-		LOG_LEVEL_WARNING("WARNING:  try to allocated pointer with 0 bytes '%s'  at  line  %i.",_absolute_filename,_line);
+		LOG_LEVEL_WARNING(filename,_line,"Try to allocate pointer with 0 bytes");
 		return NULL;
 	}
 
@@ -346,10 +261,11 @@ void 	*MEMMGR_malloc(size_t  _size,  const  char  *_absolute_filename,  int  _li
 			&&
 			((index  =  MEMMGR_get_free_cell_memptr_table())  !=  -1))
 	{
+		strcpy(heap_allocat->filename,filename);
 		heap_allocat->size  =  _size;
 		heap_allocat->offset_mempointer_table  =  index;
 
-		MEMMGR_get_filename(heap_allocat->filename,  _absolute_filename);
+
 		heap_allocat->line  =  _line;
 
 		random_number  =  ((unsigned)(rand()%0xFFFF)  <<  16)  |  (rand()%0xFFFF);
@@ -372,7 +288,7 @@ void 	*MEMMGR_malloc(size_t  _size,  const  char  *_absolute_filename,  int  _li
 		//  memset  pointer
 		memset(pointer,0,_size);
 	}else{
-		LOG_LEVEL_ERRORF("Table full of pointers or not enought memory");
+		LOG_LEVEL_ERRORF(__FILE__,__LINE__,"Table full of pointers or not enought memory");
 	}
 
 	//malloc_mutex.unlock();
@@ -401,7 +317,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	void  *base_pointer;
 
 	if(pointer == NULL){
-		LOG_LEVEL_ERROR("ERROR:  try to deallocate NULL pointer '%s' at line %i.",filename,line);
+		LOG_LEVEL_ERROR(filename,line,"Try to deallocate NULL pointer");
 		goto MEMMGR_free_continue;
 	}
 
@@ -413,13 +329,13 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  '%s'  at  line  %i.",filename,line);
+		LOG_LEVEL_ERROR(filename,line,"free():Try to deallocate a pointer with CRC error. Pointer corrupted or pointer not managed by this memory manager!");
 		goto MEMMGR_free_continue;
 	}
 
 	if(preheap_allocat->offset_mempointer_table  <  0  ||  preheap_allocat->offset_mempointer_table  >=  MAX_MEMPOINTERS)
 	{
-		LOG_LEVEL_ERROR("MEM  ERROR:  bad  index  mem  table  in  file  '%s'  at  line  %i.",filename,line);
+		LOG_LEVEL_ERROR(filename,line,"Bad  index  mem  table");
 		goto MEMMGR_free_continue;
 	}
 
@@ -429,7 +345,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	g_allocated_pointer[preheap_allocat->offset_mempointer_table]  =  NULL;
 
 	if(g_n_free_pointers>=(MAX_MEMPOINTERS-1)){
-		LOG_LEVEL_ERRORF("reached max pointers!");
+		LOG_LEVEL_ERRORF(__FILE__,__LINE__,"Reached max pointers!");
 		goto MEMMGR_free_continue;
 	}
 
@@ -480,36 +396,36 @@ void *MEMMGR_realloc(void *ptr, size_t size,  const  char  *absolute_filename,  
 	return new_ptr;
 }
 //--------------------------------------------------------------------------------------------
-void  MEMMGR_print_error_on_wrong_deallocate_method(int  allocator, const char *filename, int line)
+void  MEMMGR_print_error_on_wrong_deallocate_method(const char *_filename, int _line,int  _allocator)
 {
 
 
-	switch(allocator)
+	switch(_allocator)
 	{
 	case  MALLOC_ALLOCATOR:
-		LOG_LEVEL_ERROR("ERROR:  g_allocated_pointer  at  filename  '%s'  line  %i  must  freed  with  function  free().",filename,  line);
+		LOG_LEVEL_ERROR(_filename,  _line,"Allocated_pointer must freed  with  function  free()");
 		break;
 	case  NEW_ALLOCATOR:
-		LOG_LEVEL_ERROR("ERROR:  g_allocated_pointer  at  filename  '%s'  line  %i  must  freed  with  operator  delete.",filename,  line);
+		LOG_LEVEL_ERROR(_filename,  _line,"Allocated_pointer must freed  with  operator  delete");
 		break;
 	case  NEW_WITH_BRACETS_ALLOCATOR:
-		LOG_LEVEL_ERROR("ERROR:  g_allocated_pointer  at  filename  '%s'  line  %i  must  freed  with  operator  delete[].",filename,  line);
+		LOG_LEVEL_ERROR(_filename,  _line,"Allocated_pointer must freed  with  operator  delete[]");
 		break;
 	}
 }
 
 //----------------------------------------------------------------------------------------
-void  MEMMGR_free_from_malloc(void  *p,  const  char  *absolute_filename,  int  line  )
+void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int  _line  )
 {
 	char  filename[MEMMGR_MAX_FILENAME_LENGTH];
-	MEMMGR_get_filename(filename,absolute_filename);
+	MEMMGR_get_filename(filename,_absolute_filename);
 	PointerPreHeapInfo  *preheap_allocat  =  NULL;
 	PointerPostHeapInfo  *postheap_allocat  =  NULL;
 
 
 	if(p == NULL)
 	{
-		LOG_LEVEL_WARNING("WARNING:  NULL  pointer  to  deallocate  at  filename  '%s'  line  %i.",filename,  line);
+		LOG_LEVEL_WARNING(filename,  _line,"NULL  pointer  to  deallocate");
 		return;
 	}
 
@@ -519,18 +435,18 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *absolute_filename,  int  
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  '%s'  at  line  %i.",filename,line);
+		LOG_LEVEL_ERROR(filename,_line,"Bad  crc  pointer");
 		return;
 	}
 
 	if(preheap_allocat->type_allocator  !=  MALLOC_ALLOCATOR)
 	{
-		MEMMGR_print_error_on_wrong_deallocate_method(preheap_allocat->type_allocator, filename, line);
+		MEMMGR_print_error_on_wrong_deallocate_method(filename, _line,preheap_allocat->type_allocator);
 		return;
 
 	}
 
-	MEMMGR_free(p,  filename,  line);
+	MEMMGR_free(p,  filename,  _line);
 }
 //----------------------------------------------------------------------------------------
 void  MEMMGR_free_all_allocated_pointers(void)
@@ -567,19 +483,19 @@ void  MEMMGR_print_status(void)
 			{
 				allocated_bytes+=preheap_allocat->size;
 				pointers_to_deallocate++;
-				LOG_LEVEL_ERROR("%s:%i:Allocated  pointer  NOT  DEALLOCATED (%p).",preheap_allocat->filename,  preheap_allocat->line,g_allocated_pointer[preheap_allocat->offset_mempointer_table]);
+				LOG_LEVEL_ERROR(preheap_allocat->filename,  preheap_allocat->line,"Allocated  pointer  NOT  DEALLOCATED (%p)",g_allocated_pointer[preheap_allocat->offset_mempointer_table]);
 			}
 		}
 	}
 	//-----
 	if(pointers_to_deallocate>0  ||  allocated_bytes>0)
 	{
-		LOG_LEVEL_ERROR("bytes  to  deallocate  =  %i  bytes",allocated_bytes);
-		LOG_LEVEL_ERROR("Mempointers  to  deallocate  =  %i",pointers_to_deallocate);
+		LOG_LEVEL_ERROR(__FILE__,__LINE__,"Bytes  to  deallocate  =  %i  bytes",allocated_bytes);
+		LOG_LEVEL_ERROR(__FILE__,__LINE__,"Mempointers  to  deallocate  =  %i",pointers_to_deallocate);
 	}
 	else
 	{
-		LOG_LEVEL_INFOF("MEMRAM:ok.");
+		LOG_LEVEL_INFOF(__FILE__,__LINE__,"MEMRAM OK");
 	}
 }
 

@@ -22,7 +22,7 @@ bool	MEMMGR_push_file_line(const  char  *absolute_filename,   int   line)
 	}
 	else
 	{
-		LOG_LEVEL_INFOF("reached max stacked files!");
+		LOG_LEVEL_INFOF(__FILE__,__LINE__,"reached max stacked files!");
 		//return false;
 	}
 
@@ -120,7 +120,7 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 
 	if(pointer == NULL)
 	{
-		LOG_LEVEL_WARNING("WARNING:  NULL  pointer  to  deallocate  at  filename  '%s'  line  %i.",source_file,  source_line);
+		LOG_LEVEL_WARNING(source_file,  source_line,"delete: Try to deallocate NULL pointer!");
 		return;
 	}
 
@@ -136,13 +136,13 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)
 	{
-		LOG_LEVEL_ERROR("(%s:%i): CRC  error!",source_file,  source_line);
+		LOG_LEVEL_ERROR(source_file,source_line,"delete: Try to deallocate a pointer with CRC error. Pointer corrupted or pointer not managed by this memory manager!");
 		return;
 	}
 
 	if(preheap_allocat->type_allocator  !=  NEW_ALLOCATOR)
 	{
-		MEMMGR_print_error_on_wrong_deallocate_method(preheap_allocat->type_allocator,  source_file,  source_line);
+		MEMMGR_print_error_on_wrong_deallocate_method(source_file,  source_line,preheap_allocat->type_allocator);
 		return;
 	}
 
@@ -175,7 +175,7 @@ void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 
 	if(pointer==NULL)
 	{
-		LOG_LEVEL_WARNING("WARNING:  NULL  pointer  to  deallocate  at  filename  '%s'  line  %i",source_file,  source_line);
+		LOG_LEVEL_WARNING(source_file,  source_line,"delete[]: Try to deallocate NULL pointer");
 		return;
 	}
 
@@ -185,7 +185,7 @@ void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		LOG_LEVEL_ERROR("MEM  ERROR:  Bad  crc  pointer  '%s'  at  line  %i.",source_file,source_line);
+		LOG_LEVEL_ERROR(source_file,  source_line,"delete[]: Try to deallocate a pointer with CRC error. Pointer corrupted or pointer not managed by this memory manager!");
 		return;
 	}
 
@@ -197,7 +197,7 @@ void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 
 	if(preheap_allocat->type_allocator  !=  NEW_WITH_BRACETS_ALLOCATOR)
 	{
-		MEMMGR_print_error_on_wrong_deallocate_method(preheap_allocat->type_allocator,  source_file,  source_line);
+		MEMMGR_print_error_on_wrong_deallocate_method(source_file,  source_line,preheap_allocat->type_allocator);
 		return;
 	}
 
