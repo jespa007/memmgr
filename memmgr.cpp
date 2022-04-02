@@ -53,26 +53,20 @@ void*  operator  new(size_t  size) _THROW_BAD_ALLOC
 	pthread_mutex_unlock(&mutex_file_line);
 
 
-	void * ret_ptr=NULL;
-	void *pointer = MEMMGR_malloc(size,source_file,source_line);
+	void *pointer = NULL;
 
 
-	if(pointer!=NULL)
+	if((pointer=MEMMGR_malloc(size,source_file,source_line))!=NULL)
 	{
 		PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(pointer);
 		pre_head->type_allocator  =  NEW_ALLOCATOR;
 	}
 
-	ret_ptr=pointer;
-
-	return  ret_ptr;
+	return  pointer;
 }
 //--------------------------------------------------------------------------------------------
-void*  operator  new[](size_t  size) _THROW_BAD_ALLOC
+void*  operator  new[](size_t  _size) _THROW_BAD_ALLOC
 {
-	if(size==0){
-		throw std::bad_alloc();
-	}
 	/*if(n_registered_file_line==0){
 		return malloc(size);
 	}*/
@@ -89,15 +83,15 @@ void*  operator  new[](size_t  size) _THROW_BAD_ALLOC
 	//mutex_file_line.unlock();
 	pthread_mutex_unlock(&mutex_file_line);
 
-	void * ret_ptr=NULL;
+
 	void *pointer = NULL;
 
-	pointer  =  MEMMGR_malloc(size,source_file, source_line);
-	PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(pointer);
-	pre_head->type_allocator  =  NEW_WITH_BRACETS_ALLOCATOR;
-	ret_ptr=pointer;
+	if((pointer  =  MEMMGR_malloc(_size,source_file, source_line))!=NULL){
+		PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(pointer);
+		pre_head->type_allocator  =  NEW_WITH_BRACETS_ALLOCATOR;
+	}
 
-	return  ret_ptr;
+	return  pointer;
 
 }
 //--------------------------------------------------------------------------------------------
@@ -126,7 +120,7 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 
 	if(pointer == NULL)
 	{
-		LOG_LEVEL_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  '%s'  line  %i.",source_file,  source_line);
+		LOG_LEVEL_WARNING("WARNING:  NULL  pointer  to  deallocate  at  filename  '%s'  line  %i.",source_file,  source_line);
 		return;
 	}
 
@@ -137,8 +131,8 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 	{
 		LOG_LEVEL_ERROR("(%s:%i): allocated_pointer NOT REGISTERED OR POSSIBLE MEMORY CORRUPTION?!?!",source_file,  source_line);
 		return;
-	}
-*/
+	}*/
+
 
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)
 	{
@@ -181,7 +175,7 @@ void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 
 	if(pointer==NULL)
 	{
-		LOG_LEVEL_ERROR("ERROR:  NULL  pointer  to  deallocate  at  filename  '%s'  line  %i",source_file,  source_line);
+		LOG_LEVEL_WARNING("WARNING:  NULL  pointer  to  deallocate  at  filename  '%s'  line  %i",source_file,  source_line);
 		return;
 	}
 
@@ -211,5 +205,4 @@ void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 
 
 }
-
 
