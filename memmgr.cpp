@@ -27,9 +27,8 @@ bool	MEMMGR_push_file_line##__type__(const  char  *absolute_filename,   int   li
 	return true;\
 }\
 
-DEFINE_PUSH_FILE_LINE_TYPE(_new);
-DEFINE_PUSH_FILE_LINE_TYPE(_delete);
-
+DEFINE_PUSH_FILE_LINE_TYPE(_new)
+DEFINE_PUSH_FILE_LINE_TYPE(_delete)
 
 void*  operator  new(size_t  _size) _THROW_BAD_ALLOC
 {
