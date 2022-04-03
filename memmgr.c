@@ -181,13 +181,13 @@ void  MEMMGR_log(LogType _log_type, const char *_file, int _line, const  char  *
 
 	//  Results  Are  Stored  In  Text
 #ifdef _WIN32
-  SetConsoleTextAttribute(GetStdHandle(std==stderr?STD_ERROR_HANDLE:STD_OUTPUT_HANDLE), std==stderr?FOREGROUND_RED:(FOREGROUND_RED   | FOREGROUND_GREEN | FOREGROUND_BLUE)   | FOREGROUND_INTENSITY);
+  SetConsoleTextAttribute(GetStdHandle(_log_type==LOG_TYPE_ERROR?STD_ERROR_HANDLE:STD_OUTPUT_HANDLE), _log_type==LOG_TYPE_ERROR?FOREGROUND_RED:_log_type==LOG_TYPE_WARNING?(FOREGROUND_RED   | FOREGROUND_GREEN):(FOREGROUND_RED   | FOREGROUND_GREEN | FOREGROUND_BLUE));
 #else // ansi color
   MEMMGR_set_color_terminal(std_type, TERM_CMD_BRIGHT, _log_type==LOG_TYPE_ERROR?TERM_COLOR_RED:_log_type==LOG_TYPE_WARNING?TERM_COLOR_YELLOW:TERM_COLOR_WHITE, TERM_COLOR_BLACK);
 #endif
 	fprintf(std_type, "[ %27s:%04i - %3s]=%s",filename,_line,log_type_str, text);
 #ifdef _WIN32
-	SetConsoleTextAttribute(GetStdHandle(std==stderr?STD_ERROR_HANDLE:STD_OUTPUT_HANDLE), FOREGROUND_RED   | FOREGROUND_GREEN | FOREGROUND_BLUE);
+	SetConsoleTextAttribute(GetStdHandle(_log_type==LOG_TYPE_ERROR?STD_ERROR_HANDLE:STD_OUTPUT_HANDLE), FOREGROUND_RED   | FOREGROUND_GREEN | FOREGROUND_BLUE);
 #else // ansi color
 	MEMMGR_set_color_terminal(std_type, TERM_CMD_BRIGHT, TERM_COLOR_WHITE, TERM_COLOR_BLACK);
 #endif
@@ -243,7 +243,7 @@ void 	*MEMMGR_malloc(size_t  _size,  const  char  *_absolute_filename,  int  _li
 	MEMMGR_get_filename(filename,  _absolute_filename);
 	// do not register
 	if(_size == 0){
-		MEMMGR_LOG_WARNING(filename,_line,"Try to allocate pointer with 0 bytes");
+		MEMMGR_LOG_WARNINGF(filename,_line,"Try to allocate pointer with 0 bytes");
 		return NULL;
 	}
 
@@ -317,7 +317,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	void  *base_pointer;
 
 	if(pointer == NULL){
-		MEMMGR_LOG_ERROR(filename,line,"Try to deallocate NULL pointer");
+		MEMMGR_LOG_ERRORF(filename,line,"Try to deallocate NULL pointer");
 		goto MEMMGR_free_continue;
 	}
 
@@ -329,13 +329,13 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		MEMMGR_LOG_ERROR(filename,line,"free():Try to deallocate a pointer with CRC error. Either is a corrupted pointer or not managed pointer!");
+		MEMMGR_LOG_ERRORF(filename,line,"free():Try to deallocate a pointer with CRC error. Either is a corrupted pointer or not managed pointer!");
 		goto MEMMGR_free_continue;
 	}
 
 	if(preheap_allocat->offset_mempointer_table  <  0  ||  preheap_allocat->offset_mempointer_table  >=  MAX_MEMPOINTERS)
 	{
-		MEMMGR_LOG_ERROR(filename,line,"Bad  index  mem  table");
+		MEMMGR_LOG_ERRORF(filename,line,"Bad  index  mem  table");
 		goto MEMMGR_free_continue;
 	}
 
@@ -403,13 +403,13 @@ void  MEMMGR_print_error_on_wrong_deallocate_method(const char *_filename, int _
 	switch(_allocator)
 	{
 	case  MALLOC_ALLOCATOR:
-		MEMMGR_LOG_ERROR(_filename,  _line,"Allocated_pointer must freed  with  function  free()");
+		MEMMGR_LOG_ERRORF(_filename,  _line,"Allocated_pointer must freed  with  function  free()");
 		break;
 	case  NEW_ALLOCATOR:
-		MEMMGR_LOG_ERROR(_filename,  _line,"Allocated_pointer must freed  with  operator  delete");
+		MEMMGR_LOG_ERRORF(_filename,  _line,"Allocated_pointer must freed  with  operator  delete");
 		break;
 	case  NEW_WITH_BRACETS_ALLOCATOR:
-		MEMMGR_LOG_ERROR(_filename,  _line,"Allocated_pointer must freed  with  operator  delete[]");
+		MEMMGR_LOG_ERRORF(_filename,  _line,"Allocated_pointer must freed  with  operator  delete[]");
 		break;
 	}
 }
@@ -425,7 +425,7 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int 
 
 	if(p == NULL)
 	{
-		MEMMGR_LOG_WARNING(filename,  _line,"NULL  pointer  to  deallocate");
+		MEMMGR_LOG_WARNINGF(filename,  _line,"NULL  pointer  to  deallocate");
 		return;
 	}
 
@@ -435,7 +435,7 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int 
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		MEMMGR_LOG_ERROR(filename,_line,"Bad  crc  pointer");
+		MEMMGR_LOG_ERRORF(filename,_line,"Bad  crc  pointer");
 		return;
 	}
 
