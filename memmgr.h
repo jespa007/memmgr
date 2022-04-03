@@ -53,7 +53,8 @@
 		#include 			<sstream>
 		#include 			<regex>   // keep regex to avoid warnings error: invalid pure specifier (only ‘= 0’ ...
 
-		bool		MEMMGR_push_file_line(const char *_filename,  int  _line);
+		bool		MEMMGR_push_file_line_new(const char *_filename,  int  _line);
+		bool		MEMMGR_push_file_line_delete(const char *_filename,  int  _line);
 
 		void*  		operator  new(size_t  _size) _THROW_BAD_ALLOC;
 		void*  		operator  new[](size_t  _size) _THROW_BAD_ALLOC;
@@ -62,8 +63,8 @@
 
 
 
-		#define	new		                                    (MEMMGR_push_file_line(__FILE__,__LINE__),false)?NULL:new
-		#define	delete		  		                        (MEMMGR_push_file_line(__FILE__,__LINE__),false)?abort(): delete
+		#define	new		                                    (MEMMGR_push_file_line_new(__FILE__,__LINE__),false)?NULL:new
+		#define	delete		  		                        (MEMMGR_push_file_line_delete(__FILE__,__LINE__),false)?abort(): delete
 
 
 	#endif
