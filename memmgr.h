@@ -3,7 +3,7 @@
 
 #define MEMMGR_MAJOR_VERSION 	1
 #define MEMMGR_MINOR_VERSION 	1
-#define MEMMGR_PATCH_VERSION 	8
+#define MEMMGR_PATCH_VERSION 	9
 
 #include	<stdlib.h>
 #include	<stdio.h>
@@ -62,10 +62,11 @@
 		void   		operator  delete[](void  *_ptr)  _NO_EXCEPT_TRUE;
 
 
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wkeyword-macro"
 		#define	new		                                    (MEMMGR_push_file_line_new(__FILE__,__LINE__),false)?NULL:new
 		#define	delete		  		                        (MEMMGR_push_file_line_delete(__FILE__,__LINE__),false)?abort(): delete
-
+#pragma GCC diagnostic pop
 
 	#endif
 
