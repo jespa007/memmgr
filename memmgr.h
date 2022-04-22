@@ -61,12 +61,15 @@
 		void   		operator  delete(void  *_ptr)  _NO_EXCEPT_TRUE;
 		void   		operator  delete[](void  *_ptr)  _NO_EXCEPT_TRUE;
 
-
+#ifdef __APPLE__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wkeyword-macro"
+#endif
 		#define	new		                                    (MEMMGR_push_file_line_new(__FILE__,__LINE__),false)?NULL:new
 		#define	delete		  		                        (MEMMGR_push_file_line_delete(__FILE__,__LINE__),false)?abort(): delete
+#ifdef __APPLE__
 #pragma GCC diagnostic pop
+#endif
 
 	#endif
 
