@@ -103,8 +103,6 @@ static 	pthread_mutex_t mutex_main;
 
 //--------------------------------------------------------------------------------------------
 static void  MEMMGR_print_status(void);
-static void  MEMMGR_free_all_allocated_pointers(void);
-
 //--------------------------------------------------------------------------------------------
 // PATH UTILS
 void  MEMMGR_get_filename(char  *filename, const char *absolute_filename)
@@ -448,25 +446,6 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int 
 
 	MEMMGR_free(p,  filename,  _line);
 }
-//----------------------------------------------------------------------------------------
-void  MEMMGR_free_all_allocated_pointers(void)
-{
-
-	void *p;
-
-	for(int i = 0; i < MAX_MEMPOINTERS; i++)
-	{
-		p = g_allocated_pointer[i];
-		if(p)
-		{
-			//PointerPreHeapInfo  *pre_head  =  (PointerPreHeapInfo *)p;
-			MEMMGR_free((char *)p+sizeof(PointerPreHeapInfo),"free_all_allocated_pointers()",0);
-			g_allocated_pointer[i] = NULL;
-		}
-	}
-}
-//--------------------------------------------------------------------------------------------
-
 //--------------------------------------------------------------------------------------------
 void  MEMMGR_print_status(void)
 {
@@ -483,10 +462,12 @@ void  MEMMGR_print_status(void)
 			{
 				allocated_bytes+=preheap_allocat->size;
 				pointers_to_deallocate++;
-				MEMMGR_LOG_ERROR(preheap_allocat->filename,  preheap_allocat->line,"Allocated  pointer  NOT  DEALLOCATED (%p)",g_allocated_pointer[preheap_allocat->offset_mempointer_table]);
+				const char *pointer=((char *)preheap_allocat)+sizeof(PointerPreHeapInfo);
+				MEMMGR_LOG_ERROR(preheap_allocat->filename,  preheap_allocat->line,"Allocated  pointer  NOT  DEALLOCATED (%p)",pointer);
 			}
 		}
 	}
+
 	//-----
 	if(pointers_to_deallocate>0  ||  allocated_bytes>0)
 	{
