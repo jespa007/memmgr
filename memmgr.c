@@ -12,13 +12,13 @@
 #define GET_POSTHEADER(p)	((PointerPostHeapInfo  *)((char  *)p+(GET_SIZE_PTR(p))))
 #define	KEY_NOT_FOUND		-1
 
-#define MEMMGR_LOG_INFO(file,line,s, ...)		MEMMGR_log(LOG_TYPE_INFO,file,line,s, ##__VA_ARGS__)
+#define MEMMGR_LOG_INFO(file,line,s, ...)		MEMMGR_log(LOG_TYPE_INFO,file,line,s, __VA_ARGS__)
 #define MEMMGR_LOG_INFOF(file,line,s)			MEMMGR_LOG_INFO(file,line,s,NULL)
 
-#define MEMMGR_LOG_WARNING(file,line,s, ...)	MEMMGR_log(LOG_TYPE_WARNING,file,line,s, ##__VA_ARGS__)
+#define MEMMGR_LOG_WARNING(file,line,s, ...)	MEMMGR_log(LOG_TYPE_WARNING,file,line,s, __VA_ARGS__)
 #define MEMMGR_LOG_WARNINGF(file,line,s)   		MEMMGR_LOG_WARNING(file,line,s,NULL)
 
-#define MEMMGR_LOG_ERROR(file,line,s, ...)		MEMMGR_log(LOG_TYPE_ERROR,file,line,s, ##__VA_ARGS__)
+#define MEMMGR_LOG_ERROR(file,line,s, ...)		MEMMGR_log(LOG_TYPE_ERROR,file,line,s, __VA_ARGS__)
 #define MEMMGR_LOG_ERRORF(file,line,s)   		MEMMGR_LOG_ERROR(file,line,s,NULL)
 
 
