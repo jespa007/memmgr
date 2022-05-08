@@ -151,8 +151,10 @@ void MEMMGR_set_color_terminal(FILE *std_type, int attr, int fg, int bg)
 #endif
 void  MEMMGR_log(LogType _log_type, const char *_file, int _line, const  char  *string_text, ...) {
 
-	char  filename[MEMMGR_MAX_FILENAME_LENGTH];
-	MEMMGR_get_filename(filename,  _file);
+	char  filename[MEMMGR_MAX_FILENAME_LENGTH]="";
+	if(_file != NULL){
+		MEMMGR_get_filename(filename,  _file);
+	}
 
 	FILE *std_type = stdout;
 	const char *log_type_str="MEMINF";
@@ -282,6 +284,8 @@ void 	*MEMMGR_malloc(size_t  _size,  const  char  *_absolute_filename,  int  _li
 
 		g_n_allocated_pointers++;
 		g_n_free_pointers--;
+
+		//MEMMGR_LOG_INFO(NULL,0,"Current allocated pointers: %i of %i (%i%%)",g_n_allocated_pointers,MAX_MEMPOINTERS,(g_n_allocated_pointers*100/MAX_MEMPOINTERS));
 
 		//  memset  pointer
 		memset(pointer,0,_size);
