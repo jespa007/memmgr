@@ -3,7 +3,7 @@
 
 //--------------------------------------------------------------------------------------------
 // DEFINES
-#define	MAX_MEMPOINTERS					80000
+#define	MAX_MEMPOINTERS					800000
 #define	MEMMGR_MAX_FILENAME_LENGTH		50
 #define MAX_REGISTER_FILELINES			32
 
