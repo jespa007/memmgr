@@ -5,7 +5,7 @@
 // DEFINES
 #define	MAX_MEMPOINTERS					800000
 #define	MEMMGR_MAX_FILENAME_LENGTH		50
-#define MAX_REGISTER_FILELINES			32
+#define MEMMGR_MAX_STACK_FILE_LINE		32
 
 #define	GET_SIZE_PTR(p)		*((int  *)((char  *)p  -  sizeof(int) - sizeof(int)))
 #define GET_PREHEADER(p)	((PointerPreHeapInfo    *)((char  *)p-sizeof(PointerPreHeapInfo)))

@@ -5,15 +5,15 @@
 
 #define DEFINE_PUSH_FILE_LINE_TYPE(__type__) \
 \
-static char registered_file##__type__[MAX_REGISTER_FILELINES][MEMMGR_MAX_FILENAME_LENGTH]={0};\
-static int 	registered_line##__type__[MAX_REGISTER_FILELINES]={-1};\
+static char registered_file##__type__[MEMMGR_MAX_STACK_FILE_LINE][MEMMGR_MAX_FILENAME_LENGTH]={0};\
+static int 	registered_line##__type__[MEMMGR_MAX_STACK_FILE_LINE]={-1};\
 static int 	n_registered_file_line##__type__=0;\
 static 		pthread_mutex_t mutex_file_line##__type__;\
 \
 bool	MEMMGR_push_file_line##__type__(const  char  *absolute_filename,   int   line)\
 {\
 	pthread_mutex_lock(&mutex_file_line##__type__);\
-	if(n_registered_file_line##__type__ < MAX_REGISTER_FILELINES)\
+	if(n_registered_file_line##__type__ < MEMMGR_MAX_STACK_FILE_LINE)\
 	{\
 		MEMMGR_get_filename(registered_file##__type__[n_registered_file_line##__type__],absolute_filename);\
 		registered_line_new[n_registered_file_line##__type__]=line;\
