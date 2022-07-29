@@ -77,7 +77,7 @@ int main(int argc, char *argv[]){
 	std::thread *thread_test[N_TEST_THREAD]={0};// (allocate_loop);
 
 	printf("testing allocation multithread CPP\n");
-	for(unsigned i=0; i < N_TEST_THREAD; i++){
+	for(int i=0; i < N_TEST_THREAD; i++){
 		thread_test[i]=new std::thread(allocate_loop);
 	}
 
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]){
 
 	exit_thread=true;
 
-	for(unsigned i=0; i < N_TEST_THREAD; i++){
+	for(int i=0; i < N_TEST_THREAD; i++){
 		thread_test[i]->join();
 		delete thread_test[i];
 	}

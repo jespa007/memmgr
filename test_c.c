@@ -70,7 +70,7 @@ int main(int argc, char *argv[]){
 
 	printf("testing allocation multithread C\n");
 
-	for(unsigned i=0; i < N_TEST_THREAD; i++){
+	for(int i=0; i < N_TEST_THREAD; i++){
 		pthread_create(&thread_test[i],NULL,allocate_loop,NULL);
 	}
 
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]){
 	printf("exiting...\n");
 
 	exit_thread=1;
-	for(unsigned i=0; i < N_TEST_THREAD; i++){
+	for(int i=0; i < N_TEST_THREAD; i++){
 		pthread_join(thread_test[i], NULL);
 	}
 
