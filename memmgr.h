@@ -46,6 +46,7 @@
 #endif
 
 		#include            <new>
+		#include 			<functional>
 		#include 			<regex>   // keep regex to avoid warnings error: invalid pure specifier (only ‘= 0’ ...
 
 		bool		MEMMGR_push_file_line_new(const char *_filename,  int  _line);
