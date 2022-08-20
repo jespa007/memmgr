@@ -4,7 +4,7 @@
 //--------------------------------------------------------------------------------------------
 // DEFINES
 #define	MAX_MEMPOINTERS					800000
-#define	MEMMGR_MAX_FILENAME_LENGTH		50
+#define	MEMMGR_MAX_FILENAME_LENGTH		256
 #define MEMMGR_MAX_STACK_FILE_LINE		32
 
 #define	GET_SIZE_PTR(p)		*((int  *)((char  *)p  -  sizeof(int) - sizeof(int)))
