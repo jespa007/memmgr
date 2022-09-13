@@ -347,7 +347,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	g_allocated_pointer[preheap_allocat->offset_mempointer_table]  =  NULL;
 
 	if(g_n_free_pointers>=(MAX_MEMPOINTERS-1)){
-		MEMMGR_LOG_ERRORF(__FILE__,__LINE__,"Reached max pointers!");
+		MEMMGR_LOG_ERRORF(__FILE__,__LINE__,"Reached max table of free pointers!");
 		goto MEMMGR_free_continue;
 	}
 
