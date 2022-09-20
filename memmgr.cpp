@@ -117,7 +117,7 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 
 	if(pointer == NULL)
 	{
-		MEMMGR_LOG_WARNINGF(source_file,  source_line,"delete: Try to deallocate NULL pointer!");
+		MEMMGR_LOG_WARNINGF(source_file,  source_line,"delete: Trying to deallocate NULL pointer!");
 		return;
 	}
 
@@ -126,7 +126,7 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)
 	{
-		MEMMGR_LOG_ERRORF(source_file,source_line,"delete: Try to deallocate a pointer with CRC error. Either is a corrupted pointer or not managed pointer!");
+		MEMMGR_LOG_ERRORF(source_file,source_line,"delete: Trying to deallocate a pointer with CRC error. Either is a corrupted pointer or not managed pointer!");
 		return;
 	}
 
@@ -164,7 +164,7 @@ void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 
 	if(pointer==NULL)
 	{
-		MEMMGR_LOG_WARNINGF(source_file,  source_line,"delete[]: Try to deallocate NULL pointer");
+		MEMMGR_LOG_WARNINGF(source_file,  source_line,"delete[]: Trying to deallocate NULL pointer");
 		return;
 	}
 
@@ -174,7 +174,7 @@ void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		MEMMGR_LOG_ERRORF(source_file,  source_line,"delete[]: Try to deallocate a pointer with CRC error. Either is a corrupted pointer or not managed pointer!");
+		MEMMGR_LOG_ERRORF(source_file,  source_line,"delete[]: Trying to deallocate a pointer with CRC error. Either is a corrupted pointer or not managed pointer!");
 		return;
 	}
 

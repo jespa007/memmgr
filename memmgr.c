@@ -319,7 +319,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	void  *base_pointer;
 
 	if(pointer == NULL){
-		MEMMGR_LOG_ERRORF(filename,line,"Try to deallocate NULL pointer");
+		MEMMGR_LOG_ERRORF(filename,line,"Trying to deallocate NULL pointer");
 		goto MEMMGR_free_continue;
 	}
 
@@ -331,7 +331,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		MEMMGR_LOG_ERRORF(filename,line,"free():Try to deallocate a pointer with CRC error. Either is a corrupted pointer or not managed pointer!");
+		MEMMGR_LOG_ERRORF(filename,line,"free():Trying to deallocate a pointer with CRC error. Either is a corrupted pointer or not managed pointer!");
 		goto MEMMGR_free_continue;
 	}
 
