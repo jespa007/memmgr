@@ -16,7 +16,7 @@ bool	MEMMGR_push_file_line##__type__(const  char  *absolute_filename,   int   li
 	if(n_registered_file_line##__type__ < MEMMGR_MAX_STACK_FILE_LINE)\
 	{\
 		MEMMGR_get_filename(registered_file##__type__[n_registered_file_line##__type__],absolute_filename);\
-		registered_line_new[n_registered_file_line##__type__]=line;\
+		registered_line##__type__[n_registered_file_line##__type__]=line;\
 		n_registered_file_line##__type__++;\
 	}\
 	else\

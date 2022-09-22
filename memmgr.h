@@ -3,7 +3,7 @@
 
 #define MEMMGR_MAJOR_VERSION 	1
 #define MEMMGR_MINOR_VERSION 	1
-#define MEMMGR_PATCH_VERSION 	9
+#define MEMMGR_PATCH_VERSION 	10
 
 #include	<stdlib.h>
 #include	<stdio.h>

@@ -1,66 +1,73 @@
 //----------------------------
 Date: 18/04/2022
+Version: 1.1.10
+
+- [x] Fix issue bad location file/line on delete
+
+//----------------------------
+Date: 18/04/2022
 Version: 1.1.9
 
-Remove warnings clang
+- [x] Remove warnings clang
 
 //----------------------------
 Date: 1/04/2022
 Version: 1.1.8
 
-[x] Get rid dicotomic search
+- [x] Get rid dicotomic search
 
 //----------------------------
 Date: 17/02/2022
 Version: 1.1.7
 
-[x] Print memmanager status at exit program automatically
+- [x] Print memmanager status at exit program automatically
 
 //----------------------------
 Date: 03/02/2022
 Version: 1.1.6
 
-[x] Add calloc
+- [x] Add calloc
 
 //----------------------------
 Date: 05/01/2022
 Version: 1.1.5
 
-[x] Adapt changes APPLE
+- [x] Adapt changes APPLE
 
 //----------------------------
 Date: 20/07/2021
 Version: 1.1.4
 
-Fix bug not check pre/post crc at free
+- [x]Fix bug not check pre/post crc at free
 
 //----------------------------
 Date: 06/07/2020
 Version: 1.1.3
 
-Fix compatible version gcc 8.2
+- [x] Fix compatible version gcc 8.2
 
 //----------------------------
 Date: 06/07/2020
 Version: 1.1.2
 
-ignore pointers not registered in main table  c++
+- [x] ignore pointers not registered in main table  c++
 
 //----------------------------
 Date: 22/12/2019
 Version: 1.1.1
-Fix issue
+
+- [x] Fix issue
 
 //----------------------------
 Date: 22/12/2019
 Version: 1.1.0
 Exit version
 
-Port to c
+- [x] Port to c
 
 //----------------------------
 Date: 04/10/2019
 Version: 1.0.0
 Exit version
 
-First exit
+- [x] First exit
