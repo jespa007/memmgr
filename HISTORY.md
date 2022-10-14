@@ -1,5 +1,12 @@
 //----------------------------
 Date: 18/04/2022
+Version: 1.1.11
+
+ -[x] Improve lock/unlock new
+ -[x] Improve message delete when it reached n_registered_delete logs. delete NULL does not call overrided destructor
+
+//----------------------------
+Date: 18/04/2022
 Version: 1.1.10
 
 - [x] Fix issue bad location file/line on delete
