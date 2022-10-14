@@ -21,7 +21,10 @@ bool	MEMMGR_push_file_line##__type__(const  char  *absolute_filename,   int   li
 	}\
 	else\
 	{\
-		MEMMGR_LOG_INFOF(__FILE__,__LINE__,"reached max stacked files "#__type__"!");\
+		MEMMGR_LOG_INFOF(__FILE__\
+			,__LINE__\
+			,"reached max stacked files "#__type__"."\
+			"If the issue is with delete or delete [] check that is not deallocating NULL pointer. NULL pointers NEVER calls override delete so it will increments the references on each case");\
 	}\
 	pthread_mutex_unlock(&mutex_file_line##__type__);\
 	return true;\
