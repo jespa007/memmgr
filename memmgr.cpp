@@ -3,35 +3,65 @@
 #undef	new
 #undef	delete
 
-#define DEFINE_PUSH_FILE_LINE_TYPE(__type__) \
-\
-static char registered_file##__type__[MEMMGR_MAX_STACK_FILE_LINE][MEMMGR_MAX_FILENAME_LENGTH]={0};\
-static int 	registered_line##__type__[MEMMGR_MAX_STACK_FILE_LINE]={-1};\
-static int 	n_registered_file_line##__type__=0;\
-static 		pthread_mutex_t mutex_file_line##__type__;\
-\
-bool	MEMMGR_push_file_line##__type__(const  char  *absolute_filename,   int   line)\
-{\
-	pthread_mutex_lock(&mutex_file_line##__type__);\
-	if(n_registered_file_line##__type__ < MEMMGR_MAX_STACK_FILE_LINE)\
+//#define DEFINE_PUSH_FILE_LINE_TYPE(__type__)
+//---------
+// DELETE
+
+
+static char registered_file_new[MEMMGR_MAX_STACK_FILE_LINE][MEMMGR_MAX_FILENAME_LENGTH]={0};
+static int 	registered_line_new[MEMMGR_MAX_STACK_FILE_LINE]={-1};
+static int 	n_registered_file_line_new=0;
+static 		pthread_mutex_t mutex_file_line_new;
+
+bool	MEMMGR_push_file_line_new(const  char  *absolute_filename,   int   line)
+{
+	pthread_mutex_lock(&mutex_file_line_new);
+	if(n_registered_file_line_new < MEMMGR_MAX_STACK_FILE_LINE)\
 	{\
-		MEMMGR_get_filename(registered_file##__type__[n_registered_file_line##__type__],absolute_filename);\
-		registered_line##__type__[n_registered_file_line##__type__]=line;\
-		n_registered_file_line##__type__++;\
+		MEMMGR_get_filename(registered_file_new[n_registered_file_line_new],absolute_filename);
+		registered_line_new[n_registered_file_line_new]=line;\
+		n_registered_file_line_new++;\
 	}\
 	else\
 	{\
 		MEMMGR_LOG_INFOF(__FILE__\
 			,__LINE__\
-			,"reached max stacked files "#__type__"."\
-			"If the issue is with delete or delete [] check that is not deallocating NULL pointer. NULL pointers NEVER calls override delete so it will increments the references on each case");\
+			,"reached max stacked files new");\
 	}\
-	pthread_mutex_unlock(&mutex_file_line##__type__);\
+	//pthread_mutex_unlock(&mutex_file_line_new);
 	return true;\
-}\
+}
 
-DEFINE_PUSH_FILE_LINE_TYPE(_new)
-DEFINE_PUSH_FILE_LINE_TYPE(_delete)
+//---------
+// DELETE
+
+static char registered_file_delete[MEMMGR_MAX_STACK_FILE_LINE][MEMMGR_MAX_FILENAME_LENGTH]={0};
+static int 	registered_line_delete[MEMMGR_MAX_STACK_FILE_LINE]={-1};
+static int 	n_registered_file_line_delete=0;
+static 		pthread_mutex_t mutex_file_line_delete;
+
+bool	MEMMGR_push_file_line_delete(const  char  *absolute_filename,   int   line)\
+{
+	pthread_mutex_lock(&mutex_file_line_delete);\
+	if(n_registered_file_line_delete < MEMMGR_MAX_STACK_FILE_LINE)
+	{
+		MEMMGR_get_filename(registered_file_delete[n_registered_file_line_delete],absolute_filename);
+		registered_line_delete[n_registered_file_line_delete]=line;\
+		n_registered_file_line_delete++;
+	}
+	else
+	{
+		MEMMGR_LOG_INFOF(__FILE__
+			,__LINE__\
+			,"reached max stacked files delete."
+			" Check that if somewhere is not deallocating a NULL pointer. NULL pointers NEVER calls override delete so it will increments the references on each case");\
+	}
+	pthread_mutex_unlock(&mutex_file_line_delete);
+	return true;\
+}
+
+//DEFINE_PUSH_FILE_LINE_TYPE(_new)
+//DEFINE_PUSH_FILE_LINE_TYPE(_delete)
 
 void*  operator  new(size_t  _size) _THROW_BAD_ALLOC
 {
@@ -39,7 +69,7 @@ void*  operator  new(size_t  _size) _THROW_BAD_ALLOC
 	char source_file[MEMMGR_MAX_FILENAME_LENGTH]={"??"};
 	int source_line=0;
 
-	pthread_mutex_lock(&mutex_file_line_new);//.lock();
+	//pthread_mutex_lock(&mutex_file_line_new);//.lock();
 
 
 	if(n_registered_file_line_new > 0)
