@@ -28,7 +28,7 @@ bool	MEMMGR_push_file_line_new(const  char  *absolute_filename,   int   line)
 			,__LINE__\
 			,"reached max stacked files new");\
 	}\
-	//pthread_mutex_unlock(&mutex_file_line_new);
+	pthread_mutex_unlock(&mutex_file_line_new);
 	return true;\
 }
 
@@ -69,7 +69,7 @@ void*  operator  new(size_t  _size) _THROW_BAD_ALLOC
 	char source_file[MEMMGR_MAX_FILENAME_LENGTH]={"??"};
 	int source_line=0;
 
-	//pthread_mutex_lock(&mutex_file_line_new);//.lock();
+	pthread_mutex_lock(&mutex_file_line_new);//.lock();
 
 
 	if(n_registered_file_line_new > 0)
@@ -102,6 +102,8 @@ void*  operator  new[](size_t  _size) _THROW_BAD_ALLOC
 	}*/
 	char source_file[MEMMGR_MAX_FILENAME_LENGTH]={"??"};
 	int source_line=0;
+
+	pthread_mutex_lock(&mutex_file_line_new);//.lock();
 
 	if(n_registered_file_line_new > 0)
 	{

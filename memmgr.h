@@ -70,7 +70,23 @@
 #pragma GCC diagnostic ignored "-Wkeyword-macro"
 #endif
 		#define	new		                                    (MEMMGR_push_file_line_new(__FILE__,__LINE__),false)?NULL:new
+
+		///
+		/// Delete it fails in this situations:
+		///
+		/// 1. When deletes a NULL pointer: It invokes MEMMGR_push_file_line but delete() or delete[]() operator is not called, so
+		///    it increments its counter delete refs
+		/// 2. The procedure on delete is the following:
+		///    1st: It captures current file line by calling MEMMGR_push_file_line_delete
+		///    2nd: It calls object destructor (i.e Object::~Object)
+		///    3rd: It call overrided delete[],delete operator
+		///
+		///    On the 1st and 3rd steps there's a mutex_lock that blocks temporally counter and file/line refs to set and get current
+		///    file/line where delete operator was invoked. During the destructor call (2nd step)  destructor can call other deletes
+		//     and become mismatched file/line
+
 		#define	delete		  		                        (MEMMGR_push_file_line_delete(__FILE__,__LINE__),false)?abort(): delete
+
 #ifdef __APPLE__
 #pragma GCC diagnostic pop
 #endif
