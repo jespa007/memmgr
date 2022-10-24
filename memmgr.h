@@ -2,8 +2,8 @@
 #define __MEMMORY_MANNAGER_H__
 
 #define MEMMGR_MAJOR_VERSION 	1
-#define MEMMGR_MINOR_VERSION 	1
-#define MEMMGR_PATCH_VERSION 	11
+#define MEMMGR_MINOR_VERSION 	2
+#define MEMMGR_PATCH_VERSION 	0
 
 #include	<stdlib.h>
 #include	<stdio.h>
@@ -23,6 +23,7 @@
 	#define	__FUNCTION__  "??"
 #endif
 
+	void		MEMMGR_enableLog(bool _enable);
 	void        *MEMMGR_malloc(size_t  _size,  const  char  *_filename,  int  _line);
 	void        *MEMMGR_realloc(void *_ptr, size_t  _size,  const  char  *_filename,  int  _line);
 	void 		*MEMMGR_calloc(size_t  _n_items,size_t  _size_item,  const  char  *_filename,  int  _line);

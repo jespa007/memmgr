@@ -89,6 +89,8 @@ typedef  struct{
 //--------------------------------------------------------------------------------------------
 // GLOBAL VARS
 
+static bool g_enable_log=true;
+
 static int	g_n_allocated_bytes  =  0;
 static int	g_n_allocated_pointers  =  0;
 static bool	g_memmgr_was_init  =  false;
@@ -146,10 +148,19 @@ void MEMMGR_set_color_terminal(FILE *std_type, int attr, int fg, int bg)
 
 //--------------------------------------------------------------------------------------------
 // LOG UTILS
+
+void MEMMGR_enableLog(bool _enable_log) {
+	g_enable_log=_enable_log;
+}
+
 #ifndef  __GNUC__
 #pragma  managed(push,  off)
 #endif
 void  MEMMGR_log(LogType _log_type, const char *_file, int _line, const  char  *string_text, ...) {
+
+	if(g_enable_log==false){
+		return;
+	}
 
 	char  filename[MEMMGR_MAX_FILENAME_LENGTH]="";
 	if(_file != NULL){
@@ -200,6 +211,10 @@ void  MEMMGR_log(LogType _log_type, const char *_file, int _line, const  char  *
 #ifndef  __GNUC__
 #pragma  managed(pop)
 #endif
+
+void		MEMMGR_showMessages(bool _show){
+
+}
 
 //--------------------------------------------------------------------------------------------
 // MEMMGR Functions
