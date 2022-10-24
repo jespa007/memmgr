@@ -212,10 +212,6 @@ void  MEMMGR_log(LogType _log_type, const char *_file, int _line, const  char  *
 #pragma  managed(pop)
 #endif
 
-void		MEMMGR_showMessages(bool _show){
-
-}
-
 //--------------------------------------------------------------------------------------------
 // MEMMGR Functions
 void  MEMMGR_init(void)
