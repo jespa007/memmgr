@@ -22,18 +22,11 @@ if(MSVC)
 	add_definitions(/wd4244)
 
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")  # g++ / gcc
-	SET( COMMON_C_PARAMS	 " -pthread ")
-	SET( COMMON_CXX_PARAMS 	 " -pthread -std=gnu++0x -g -O0")
+	SET( CMAKE_C_FLAGS	 " -pthread ")
+	SET( CMAKE_CXX_FLAGS 	 " -pthread -std=gnu++0x -g -O0")
 	
 endif()
  
-
-
-# Set C flags.
-SET(CMAKE_CXX_FLAGS   	" ${TARGET_FLAGS} ${COMMON_CXX_PARAMS}  " )
-SET(CMAKE_C_FLAGS   	" ${TARGET_FLAGS} ${COMMON_C_PARAMS}  " )
-
-
 MESSAGE ("Target : " ${TARGET})
 
 #Redefine output dir ...
