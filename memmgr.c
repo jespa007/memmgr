@@ -7,9 +7,11 @@
 #define	MEMMGR_MAX_FILENAME_LENGTH		256
 #define MEMMGR_MAX_STACK_FILE_LINE		32
 
-#define	GET_SIZE_PTR(p)		*((int  *)((char  *)p  -  sizeof(int) - sizeof(int)))
-#define GET_PREHEADER(p)	((PointerPreHeapInfo    *)((char  *)p-sizeof(PointerPreHeapInfo)))
-#define GET_POSTHEADER(p)	((PointerPostHeapInfo  *)((char  *)p+(GET_SIZE_PTR(p))))
+#define SIZEOF_ALIGNED_HEADER(_block_alignment) 		((sizeof(PointerPreHeapInfo)/(_block_alignment)+1)*(_block_alignment))
+
+#define GET_PREHEADER(p,a)	((PointerPreHeapInfo    *)((char  *)p-SIZEOF_ALIGNED_HEADER(a)))
+#define	GET_SIZE_PTR(p,a)	(GET_PREHEADER(p,a)->size)
+#define GET_POSTHEADER(p,a)	((PointerPostHeapInfo  *)((char  *)(p)+(GET_SIZE_PTR(p,a))))
 #define	KEY_NOT_FOUND		-1
 
 #define MEMMGR_LOG_INFO(file,line,s, ...)		MEMMGR_log(LOG_TYPE_INFO,file,line,s, __VA_ARGS__)
@@ -21,6 +23,7 @@
 #define MEMMGR_LOG_ERROR(file,line,s, ...)		MEMMGR_log(LOG_TYPE_ERROR,file,line,s, __VA_ARGS__)
 #define MEMMGR_LOG_ERRORF(file,line,s)   		MEMMGR_LOG_ERROR(file,line,s,NULL)
 
+#define DEFAULT_C_ALIGNMENT	sizeof(void *)
 
 //--------------------------------------------------------------------------------------------
 //  turn  off  macros...
@@ -78,7 +81,7 @@ typedef  struct{
 	int		offset_mempointer_table;
 	char	filename[MEMMGR_MAX_FILENAME_LENGTH];  //  base    		-16-256
 	int		line;          					//  base          	-16
-	int		size;                      		//  base          	-8
+	size_t	size;                      		//  base          	-8
 	int		pre_crc;                		//  base          	-4
 }PointerPreHeapInfo;
 
@@ -246,10 +249,8 @@ int  MEMMGR_get_free_cell_memptr_table(void)
 	}
 	return KEY_NOT_FOUND; // no memory free...
 }
-
 //--------------------------------------------------------------------------------------------
-void 	*MEMMGR_malloc(size_t  _size,  const  char  *_absolute_filename,  int  _line)
-{
+void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,  int  _line, int _aligment){
 	char  filename[MEMMGR_MAX_FILENAME_LENGTH];
 	MEMMGR_get_filename(filename,  _absolute_filename);
 	// do not register
@@ -267,7 +268,8 @@ void 	*MEMMGR_malloc(size_t  _size,  const  char  *_absolute_filename,  int  _li
 
 	if(!g_memmgr_was_init)  MEMMGR_init();  //  auto_inicialize  return  malloc(size);
 
-	heap_allocat  =  (PointerPreHeapInfo  *)malloc(sizeof(PointerPreHeapInfo)  +  sizeof(PointerPostHeapInfo)  +  _size);
+	size_t size_of_aligned_header=SIZEOF_ALIGNED_HEADER(_aligment);
+	heap_allocat  =  (PointerPreHeapInfo  *)malloc(size_of_aligned_header    +  _size +  sizeof(PointerPostHeapInfo));
 	if(heap_allocat
 			&&
 			((index  =  MEMMGR_get_free_cell_memptr_table())  !=  -1))
@@ -287,11 +289,11 @@ void 	*MEMMGR_malloc(size_t  _size,  const  char  *_absolute_filename,  int  _li
 
 		g_allocated_pointer[index] 	    = heap_allocat;
 
-		*((int  *)((char  *)heap_allocat+_size+sizeof(PointerPreHeapInfo)))  =  random_number;
+		((PointerPostHeapInfo  *)((char  *)heap_allocat+size_of_aligned_header+_size))->post_crc  =  random_number;
 
 		g_n_allocated_bytes  +=  _size;
 
-		pointer  =  ((char  *)heap_allocat+sizeof(PointerPreHeapInfo));
+		pointer  =  ((char  *)heap_allocat+size_of_aligned_header);
 
 		g_n_allocated_pointers++;
 		g_n_free_pointers--;
@@ -309,9 +311,13 @@ void 	*MEMMGR_malloc(size_t  _size,  const  char  *_absolute_filename,  int  _li
 
 	return pointer;
 }
+
+void 	*MEMMGR_malloc(size_t _size,  const  char  *_absolute_filename,  int  _line){
+	return MEMMGR_malloc_alignment(_size, _absolute_filename,_line,DEFAULT_C_ALIGNMENT);
+}
 //--------------------------------------------------------------------------------------------
 void *MEMMGR_calloc(size_t  n_items,size_t  size_item,  const  char  *absolute_filename,  int  line){
-	return MEMMGR_malloc(n_items*size_item,absolute_filename,line);
+	return MEMMGR_malloc_alignment(n_items*size_item,absolute_filename,line,DEFAULT_C_ALIGNMENT);
 }
 //--------------------------------------------------------------------------------------------
 void  MEMMGR_free_c_pointer(void  *pointer){
@@ -319,8 +325,7 @@ void  MEMMGR_free_c_pointer(void  *pointer){
 }
 
 //--------------------------------------------------------------------------------------------
-void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
-{
+void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line, int _alignment){
 
 	//std::lock_guard<std::mutex> lg(mutex_main);
 	pthread_mutex_lock(&mutex_main);
@@ -336,8 +341,8 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line)
 
 
 	//  Getheaders...
-	base_pointer  =  preheap_allocat    =  GET_PREHEADER(pointer);
-	postheap_allocat  =  GET_POSTHEADER(pointer);
+	base_pointer  =  preheap_allocat    =  GET_PREHEADER(pointer,_alignment);
+	postheap_allocat  =  GET_POSTHEADER(pointer,_alignment);
 
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
@@ -387,7 +392,7 @@ void *MEMMGR_realloc(void *ptr, size_t size,  const  char  *absolute_filename,  
 	}
 
 
-	PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(ptr);
+	PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(ptr,DEFAULT_C_ALIGNMENT);
 
 
 	if ((size_t)pre_head->size >= size) {
@@ -404,7 +409,7 @@ void *MEMMGR_realloc(void *ptr, size_t size,  const  char  *absolute_filename,  
 		return NULL; // TODO: set errno on failure.
 	}
 	memcpy(new_ptr, ptr, pre_head->size);
-	MEMMGR_free(ptr, absolute_filename, line);
+	MEMMGR_free(ptr, absolute_filename, line,DEFAULT_C_ALIGNMENT);
 
 	return new_ptr;
 }
@@ -428,7 +433,7 @@ void  MEMMGR_print_error_on_wrong_deallocate_method(const char *_filename, int _
 }
 
 //----------------------------------------------------------------------------------------
-void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int  _line  )
+void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int  _line)
 {
 	char  filename[MEMMGR_MAX_FILENAME_LENGTH];
 	MEMMGR_get_filename(filename,_absolute_filename);
@@ -442,8 +447,8 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int 
 		return;
 	}
 
-	preheap_allocat  =  GET_PREHEADER(p);
-	postheap_allocat  =  GET_POSTHEADER(p);
+	preheap_allocat  =  GET_PREHEADER(p,DEFAULT_C_ALIGNMENT);
+	postheap_allocat  =  GET_POSTHEADER(p,DEFAULT_C_ALIGNMENT);
 
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
@@ -459,7 +464,7 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int 
 
 	}
 
-	MEMMGR_free(p,  filename,  _line);
+	MEMMGR_free(p,  filename,  _line, DEFAULT_C_ALIGNMENT);
 }
 //--------------------------------------------------------------------------------------------
 void  MEMMGR_print_status(void)

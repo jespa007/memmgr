@@ -1,4 +1,22 @@
 ---
+Date: 20/12/2022
+Version: 1.2.1
+
+- [x] Fix return aligned pointer on malloc/new and delete overloaded operators according standard
+
+Issue created
+https://stackoverflow.com/questions/74840432/https://stackoverflow.com/questions/74840432/overloading-new-delete-operators-on-ubuntu-22-04-libc-2-35-and-calling-sdl2-sdl
+
+More information
+https://stackoverflow.com/questions/15422297/when-malloc-returns-what-does-8-byte-alignment-mean
+https://stackoverflow.com/questions/38088732/explanation-to-aligned-malloc-implementation
+https://stackoverflow.com/questions/8752546/how-does-malloc-understand-alignment
+https://stackoverflow.com/questions/56713868/overloading-operator-new-with-smaller-default-alignment	   
+
+	   
+
+
+---
 Date: 24/10/2022
 Version: 1.2.0
 

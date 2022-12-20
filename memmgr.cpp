@@ -3,6 +3,8 @@
 #undef	new
 #undef	delete
 
+#define DEFAULT_CPP_ALIGNMENT	alignof(std::max_align_t)
+
 //#define DEFINE_PUSH_FILE_LINE_TYPE(__type__)
 //---------
 // DELETE
@@ -86,11 +88,13 @@ void*  operator  new(size_t  _size) _THROW_BAD_ALLOC
 	void *pointer = NULL;
 
 
-	if((pointer=MEMMGR_malloc(_size,source_file,source_line))!=NULL)
-	{
-		PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(pointer);
-		pre_head->type_allocator  =  NEW_ALLOCATOR;
+	if((pointer=MEMMGR_malloc_alignment(_size,source_file,source_line,DEFAULT_CPP_ALIGNMENT))==NULL){
+		throw std::bad_alloc();
 	}
+
+	PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(pointer,DEFAULT_CPP_ALIGNMENT);
+	pre_head->type_allocator  =  NEW_ALLOCATOR;
+
 
 	return  pointer;
 }
@@ -118,10 +122,13 @@ void*  operator  new[](size_t  _size) _THROW_BAD_ALLOC
 
 	void *pointer = NULL;
 
-	if((pointer  =  MEMMGR_malloc(_size,source_file, source_line))!=NULL){
-		PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(pointer);
-		pre_head->type_allocator  =  NEW_WITH_BRACETS_ALLOCATOR;
+	if((pointer  =  MEMMGR_malloc_alignment(_size,source_file, source_line,DEFAULT_CPP_ALIGNMENT))==NULL){
+		throw std::bad_alloc();
 	}
+
+	PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(pointer,DEFAULT_CPP_ALIGNMENT);
+	pre_head->type_allocator  =  NEW_WITH_BRACETS_ALLOCATOR;
+
 
 	return  pointer;
 
@@ -156,8 +163,8 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 		return;
 	}
 
-	preheap_allocat  =  GET_PREHEADER(pointer);
-	postheap_allocat  =  GET_POSTHEADER(pointer);
+	preheap_allocat  =  GET_PREHEADER(pointer,DEFAULT_CPP_ALIGNMENT);
+	postheap_allocat  =  GET_POSTHEADER(pointer,DEFAULT_CPP_ALIGNMENT);
 
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)
 	{
@@ -171,7 +178,7 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 		return;
 	}
 
-	MEMMGR_free(pointer,  source_file,  source_line);
+	MEMMGR_free(pointer,  source_file,  source_line,DEFAULT_CPP_ALIGNMENT);
 
 }
 //--------------------------------------------------------------------------------------------
@@ -203,8 +210,8 @@ void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 		return;
 	}
 
-	preheap_allocat  =  GET_PREHEADER(pointer);
-	postheap_allocat  =  GET_POSTHEADER(pointer);
+	preheap_allocat  =  GET_PREHEADER(pointer,DEFAULT_CPP_ALIGNMENT);
+	postheap_allocat  =  GET_POSTHEADER(pointer,DEFAULT_CPP_ALIGNMENT);
 
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
@@ -219,7 +226,7 @@ void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 		return;
 	}
 
-	MEMMGR_free(pointer,  source_file,  source_line);
+	MEMMGR_free(pointer,  source_file,  source_line,DEFAULT_CPP_ALIGNMENT);
 
 }
 

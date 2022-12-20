@@ -3,7 +3,7 @@
 
 #define MEMMGR_MAJOR_VERSION 	1
 #define MEMMGR_MINOR_VERSION 	2
-#define MEMMGR_PATCH_VERSION 	0
+#define MEMMGR_PATCH_VERSION 	1
 
 #include	<stdlib.h>
 #include	<stdio.h>
@@ -55,6 +55,7 @@
 		#include 			<sstream>
 		#include 			<memory>
 		#include 			<regex>   // include "regex" first to avoid warnings error: invalid pure specifier (only ‘= 0’ ...
+		#include			<cstddef>
 
 		bool		MEMMGR_push_file_line_new(const char *_filename,  int  _line);
 		bool		MEMMGR_push_file_line_delete(const char *_filename,  int  _line);
