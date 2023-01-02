@@ -123,6 +123,10 @@ void*  operator  new[](size_t  _size) _THROW_BAD_ALLOC
 	void *pointer = NULL;
 
 	if((pointer  =  MEMMGR_malloc_alignment(_size,source_file, source_line,DEFAULT_CPP_ALIGNMENT))==NULL){
+		if(_size == 0){
+			return NULL;
+		}
+
 		throw std::bad_alloc();
 	}
 
