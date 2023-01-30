@@ -142,6 +142,11 @@ void*  operator  new[](size_t  _size) _THROW_BAD_ALLOC
 
 }
 //--------------------------------------------------------------------------------------------
+void  operator  delete(void  *pointer, size_t _size) _NO_EXCEPT_TRUE{
+	(((void)pointer),(void)_size);
+	std::runtime_error("operator delete(void  *pointer, size_t _size) not implemented");
+}
+
 void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 {
 	PointerPreHeapInfo *preheap_allocat=NULL;
@@ -190,6 +195,11 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 
 }
 //--------------------------------------------------------------------------------------------
+void  operator  delete[](void  *pointer, size_t _size) _NO_EXCEPT_TRUE{
+	(((void)pointer),(void)_size);
+	std::runtime_error("operator delete(void  *pointer, size_t _size) not implemented");
+}
+
 void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 {
 	PointerPreHeapInfo *preheap_allocat=NULL;

@@ -56,6 +56,18 @@
 		#include 			<memory>
 		#include 			<regex>   // include "regex" first to avoid warnings error: invalid pure specifier (only ‘= 0’ ...
 		#include			<cstddef>
+		// check std features in order to include or not
+		#include			<set>
+		#include			<array>
+		#include			<iostream>
+		#include			<fstream>
+		#include			<optional>
+		#include			<iomanip>
+		#include			<chrono>
+		#include			<cstring>
+		#include 			<codecvt>
+		#include 			<locale>
+
 
 		bool		MEMMGR_push_file_line_new(const char *_filename,  int  _line);
 		bool		MEMMGR_push_file_line_delete(const char *_filename,  int  _line);
@@ -66,7 +78,8 @@
 		void*  		operator  new(size_t  _size) _THROW_BAD_ALLOC;
 		void*  		operator  new[](size_t  _size) _THROW_BAD_ALLOC;
 		void   		operator  delete(void  *_ptr)  _NO_EXCEPT_TRUE;
-		void   		operator  delete[](void  *_ptr)  _NO_EXCEPT_TRUE;
+		void   		operator  delete(void  *_ptr, std::size_t _size)  _NO_EXCEPT_TRUE;
+		void   		operator  delete[](void  *_ptr, std::size_t _size)  _NO_EXCEPT_TRUE;
 
 #ifdef __APPLE__
 #pragma GCC diagnostic push
