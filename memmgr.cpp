@@ -142,10 +142,12 @@ void*  operator  new[](size_t  _size) _THROW_BAD_ALLOC
 
 }
 //--------------------------------------------------------------------------------------------
+#if (__cplusplus >= 201402L)
 void  operator  delete(void  *pointer, size_t _size) _NO_EXCEPT_TRUE{
 	(((void)pointer),(void)_size);
 	std::runtime_error("operator delete(void  *pointer, size_t _size) not implemented");
 }
+#endif
 
 void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 {
@@ -195,10 +197,12 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 
 }
 //--------------------------------------------------------------------------------------------
+#if (__cplusplus >= 201402L)
 void  operator  delete[](void  *pointer, size_t _size) _NO_EXCEPT_TRUE{
 	(((void)pointer),(void)_size);
 	std::runtime_error("operator delete(void  *pointer, size_t _size) not implemented");
 }
+#endif
 
 void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 {

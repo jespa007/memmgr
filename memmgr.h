@@ -61,13 +61,16 @@
 		#include			<array>
 		#include			<iostream>
 		#include			<fstream>
-		#include			<optional>
 		#include			<iomanip>
 		#include			<chrono>
 		#include			<cstring>
 		#include 			<codecvt>
 		#include 			<locale>
-
+		#if defined __has_include
+		#  if __has_include (<optional.h>)
+		#    include <optional.h>
+		#  endif
+		#endif
 
 		bool		MEMMGR_push_file_line_new(const char *_filename,  int  _line);
 		bool		MEMMGR_push_file_line_delete(const char *_filename,  int  _line);
@@ -78,8 +81,10 @@
 		void*  		operator  new(size_t  _size) _THROW_BAD_ALLOC;
 		void*  		operator  new[](size_t  _size) _THROW_BAD_ALLOC;
 		void   		operator  delete(void  *_ptr)  _NO_EXCEPT_TRUE;
+#if (__cplusplus >= 201402L) // delete (void  *_ptr, std::size_t _size) was introduced on std::c++14
 		void   		operator  delete(void  *_ptr, std::size_t _size)  _NO_EXCEPT_TRUE;
 		void   		operator  delete[](void  *_ptr, std::size_t _size)  _NO_EXCEPT_TRUE;
+#endif
 
 #ifdef __APPLE__
 #pragma GCC diagnostic push
