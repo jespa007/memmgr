@@ -142,14 +142,8 @@ void*  operator  new[](size_t  _size) _THROW_BAD_ALLOC
 
 }
 //--------------------------------------------------------------------------------------------
-#if (__cplusplus >= 201402L)
-void  operator  delete(void  *pointer, size_t _size) _NO_EXCEPT_TRUE{
-	(((void)pointer),(void)_size);
-	std::runtime_error("operator delete(void  *pointer, size_t _size) not implemented");
-}
-#endif
 
-void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
+void  __cpp_delete__(void  *pointer) _NO_EXCEPT_TRUE
 {
 	PointerPreHeapInfo *preheap_allocat=NULL;
 	PointerPostHeapInfo *postheap_allocat=NULL;
@@ -196,15 +190,22 @@ void  operator  delete(void  *pointer) _NO_EXCEPT_TRUE
 	MEMMGR_free(pointer,  source_file,  source_line,DEFAULT_CPP_ALIGNMENT);
 
 }
-//--------------------------------------------------------------------------------------------
+
+
 #if (__cplusplus >= 201402L)
-void  operator  delete[](void  *pointer, size_t _size) _NO_EXCEPT_TRUE{
-	(((void)pointer),(void)_size);
-	std::runtime_error("operator delete(void  *pointer, size_t _size) not implemented");
+void  operator  delete(void  *_pointer, size_t _size) _NO_EXCEPT_TRUE{
+	((void)_size);
+	//throw std::runtime_error("operator delete(void  *pointer, size_t _size) not implemented");
+	__cpp_delete__(_pointer);
 }
 #endif
 
-void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
+void  operator  delete(void  *_pointer) _NO_EXCEPT_TRUE{
+	__cpp_delete__(_pointer);
+}
+//--------------------------------------------------------------------------------------------
+
+void  __cpp_delete_array__(void  *pointer) _NO_EXCEPT_TRUE
 {
 	PointerPreHeapInfo *preheap_allocat=NULL;
 	PointerPostHeapInfo *postheap_allocat=NULL;
@@ -250,5 +251,17 @@ void  operator  delete[](void  *pointer) _NO_EXCEPT_TRUE
 
 	MEMMGR_free(pointer,  source_file,  source_line,DEFAULT_CPP_ALIGNMENT);
 
+}
+
+#if (__cplusplus >= 201402L)
+void  operator  delete[](void  *_pointer, size_t _size) _NO_EXCEPT_TRUE{
+	((void)_size);
+	__cpp_delete_array__(_pointer);
+
+}
+#endif
+
+void  operator  delete[](void  *_pointer) _NO_EXCEPT_TRUE{
+	__cpp_delete_array__(_pointer);
 }
 
