@@ -9,10 +9,11 @@
 
 #define SIZEOF_ALIGNED_HEADER(_block_alignment) 		((sizeof(PointerPreHeapInfo)/(_block_alignment)+1)*(_block_alignment))
 
-#define GET_PREHEADER(p,a)	((PointerPreHeapInfo    *)((char  *)p-SIZEOF_ALIGNED_HEADER(a)))
-#define	GET_SIZE_PTR(p,a)	(GET_PREHEADER(p,a)->size)
-#define GET_POSTHEADER(p,a)	((PointerPostHeapInfo  *)((char  *)(p)+(GET_SIZE_PTR(p,a))))
-#define	KEY_NOT_FOUND		-1
+#define GET_PREHEADER(p,a)								((PointerPreHeapInfo    *)((char  *)p-SIZEOF_ALIGNED_HEADER(a)))
+#define GET_POINTER(header_ptr,a)						((void    *)(((char  *)header_ptr+SIZEOF_ALIGNED_HEADER(a))))
+#define	GET_SIZE_PTR(p,a)								(GET_PREHEADER(p,a)->size)
+#define GET_POSTHEADER(p,a)								((PointerPostHeapInfo  *)((char  *)(p)+(GET_SIZE_PTR(p,a))))
+#define	KEY_NOT_FOUND									-1
 
 #define MEMMGR_LOG_INFO(file,line,s, ...)		MEMMGR_log(LOG_TYPE_INFO,file,line,s, __VA_ARGS__)
 #define MEMMGR_LOG_INFOF(file,line,s)			MEMMGR_LOG_INFO(file,line,s,NULL)
@@ -482,7 +483,7 @@ void  MEMMGR_print_status(void)
 			{
 				allocated_bytes+=preheap_allocat->size;
 				pointers_to_deallocate++;
-				const char *pointer=((char *)preheap_allocat)+sizeof(PointerPreHeapInfo);
+				void *pointer=GET_POINTER(preheap_allocat,DEFAULT_C_ALIGNMENT);//((char *)preheap_allocat)+sizeof(PointerPreHeapInfo);
 				MEMMGR_LOG_ERROR(preheap_allocat->filename,  preheap_allocat->line,"Allocated  pointer  NOT  DEALLOCATED (%p)",pointer);
 			}
 		}
