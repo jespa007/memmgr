@@ -59,7 +59,6 @@
 		// check std features in order to include or not
 		#include			<set>
 		#include			<array>
-		#include			<iostream>
 		#include			<fstream>
 		#include			<iomanip>
 		#include			<chrono>
