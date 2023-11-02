@@ -1,5 +1,5 @@
 ---
-Date: 20/12/2022
+Date: 2022-12-20
 Version: 1.2.1
 
 - [x] Fix return aligned pointer on malloc/new and delete overloaded operators according standard
@@ -17,87 +17,87 @@ https://stackoverflow.com/questions/56713868/overloading-operator-new-with-small
 
 
 ---
-Date: 24/10/2022
+Date: 2022-10-24
 Version: 1.2.0
 
 - [x] option to log off memmanager messages
 
 ---
-Date: 18/04/2022
+Date: 2022-04-18
 Version: 1.1.11
 
 - [x] Improve lock/unlock new
 - [x] Improve message delete when it reached n_registered_delete logs. delete NULL does not call overrided destructor
 
 ---
-Date: 18/04/2022
+Date: 2022-04-18
 Version: 1.1.10
 
 - [x] Fix issue bad location file/line on delete
 
 ---
-Date: 18/04/2022
+Date: 2022-04-18
 Version: 1.1.9
 
 - [x] Remove warnings clang
 
 ---
-Date: 1/04/2022
+Date: 2022-04-01
 Version: 1.1.8
 
 - [x] Get rid dicotomic search
 
 ---
-Date: 17/02/2022
+Date: 2022-02-17
 Version: 1.1.7
 
 - [x] Print memmanager status at exit program automatically
 
 ---
-Date: 03/02/2022
+Date: 2022-02-03
 Version: 1.1.6
 
 - [x] Add calloc
 
 ---
-Date: 05/01/2022
+Date: 2022-01-05
 Version: 1.1.5
 
 - [x] Adapt changes APPLE
 
 ---
-Date: 20/07/2021
+Date: 2021-07-20
 Version: 1.1.4
 
 - [x]Fix bug not check pre/post crc at free
 
 ---
-Date: 06/07/2020
+Date: 2020-07-06
 Version: 1.1.3
 
 - [x] Fix compatible version gcc 8.2
 
 ---
-Date: 06/07/2020
+Date: 2020-07-06
 Version: 1.1.2
 
 - [x] ignore pointers not registered in main table  c++
 
 ---
-Date: 22/12/2019
+Date: 2019-12-22
 Version: 1.1.1
 
 - [x] Fix issue
 
 ---
-Date: 22/12/2019
+Date: 2019-12-22
 Version: 1.1.0
 Exit version
 
 - [x] Port to c
 
 ---
-Date: 04/10/2019
+Date: 2019-10-04
 Version: 1.0.0
 Exit version
 
