@@ -1,4 +1,10 @@
 ---
+Date: XXXX-XX-XX
+Version: 1.3.0
+
+- [x] Implement MEMMGR_realloc
+
+---
 Date: 2022-12-20
 Version: 1.2.1
 
@@ -14,8 +20,6 @@ https://stackoverflow.com/questions/8752546/how-does-malloc-understand-alignment
 https://stackoverflow.com/questions/56713868/overloading-operator-new-with-smaller-default-alignment	   
 
 	   
-
-
 ---
 Date: 2022-10-24
 Version: 1.2.0
