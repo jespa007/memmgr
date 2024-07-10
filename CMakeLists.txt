@@ -7,7 +7,7 @@ project(memmgr)
 # COMPILE PARAMS
 #
  
-message("dest dir:" ${CMAKE_INSTALL_PREFIX})
+MESSAGE("-- Install prefix: " ${CMAKE_INSTALL_PREFIX})
 
 
 if(MSVC)
@@ -27,7 +27,6 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")  # g++ / gcc
 	
 endif()
  
-MESSAGE ("Target : " ${TARGET})
 
 #Redefine output dir ...
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
