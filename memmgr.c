@@ -157,6 +157,8 @@ void MEMMGR_enableLog(bool _enable_log) {
 	g_enable_log=_enable_log;
 }
 
+
+
 #ifndef  __GNUC__
 #pragma  managed(push,  off)
 #endif
@@ -194,17 +196,24 @@ void  MEMMGR_log(LogType _log_type, const char *_file, int _line, const  char  *
 
 	}
 
+
+#ifndef EMSCRIPTEN
 	//  Results  Are  Stored  In  Text
 #ifdef _WIN32
   SetConsoleTextAttribute(GetStdHandle(_log_type==LOG_TYPE_ERROR?STD_ERROR_HANDLE:STD_OUTPUT_HANDLE), _log_type==LOG_TYPE_ERROR?FOREGROUND_RED:_log_type==LOG_TYPE_WARNING?(FOREGROUND_RED   | FOREGROUND_GREEN):(FOREGROUND_RED   | FOREGROUND_GREEN | FOREGROUND_BLUE));
 #else // ansi color
   MEMMGR_set_color_terminal(std_type, TERM_CMD_BRIGHT, _log_type==LOG_TYPE_ERROR?TERM_COLOR_RED:_log_type==LOG_TYPE_WARNING?TERM_COLOR_YELLOW:TERM_COLOR_WHITE, TERM_COLOR_BLACK);
 #endif
+#endif
+
 	fprintf(std_type, "[ %27s:%04i - %3s]=%s",filename,_line,log_type_str, text);
+
+#ifndef EMSCRIPTEN
 #ifdef _WIN32
 	SetConsoleTextAttribute(GetStdHandle(_log_type==LOG_TYPE_ERROR?STD_ERROR_HANDLE:STD_OUTPUT_HANDLE), FOREGROUND_RED   | FOREGROUND_GREEN | FOREGROUND_BLUE);
 #else // ansi color
 	MEMMGR_set_color_terminal(std_type, TERM_CMD_BRIGHT, TERM_COLOR_WHITE, TERM_COLOR_BLACK);
+#endif
 #endif
 
 
