@@ -2,8 +2,8 @@
 #define __MEMMORY_MANNAGER_H__
 
 #define MEMMGR_MAJOR_VERSION 	1
-#define MEMMGR_MINOR_VERSION 	2
-#define MEMMGR_PATCH_VERSION 	1
+#define MEMMGR_MINOR_VERSION 	3
+#define MEMMGR_PATCH_VERSION 	0
 
 #include	<stdlib.h>
 #include	<stdio.h>
@@ -19,16 +19,38 @@
 #include	<windows.h>
 #endif
 
+#if defined(_WIN32) && !defined(__CYGWIN__)
+# if defined(BUILD_STATIC_LIBS)
+#  define MEMMGR_DLL_EXPORT
+# elif defined(BUILD_SHARED_LIBS)
+#  define MEMMGR_DLL_EXPORT __declspec(dllexport)
+# else
+#  define MEMMGR_DLL_EXPORT __declspec(dllimport)
+# endif
+#elif defined(__OS2__) && defined(__WATCOMC__) && defined(__SW_BD)
+#  define MEMMGR_DLL_EXPORT __declspec(dllexport)
+#elif (defined(__GNUC__) || defined(__clang__) || defined(__HP_cc)) && defined(MEMMGR_SYM_VISIBILITY)
+# define MEMMGR_DLL_EXPORT __attribute__((visibility ("default")))
+#elif defined(__SUNPRO_C) && defined(MEMMGR_LDSCOPE_GLOBAL)
+# define MEMMGR_DLL_EXPORT __global
+#elif defined(EMSCRIPTEN)
+# include <emscripten.h>
+# define MEMMGR_DLL_EXPORT EMSCRIPTEN_KEEPALIVE
+# define MEMMGR_DLL_EXPORT_VAR
+#else
+# define MEMMGR_DLL_EXPORT
+#endif
+
 #ifndef  __FUNCTION__
 	#define	__FUNCTION__  "??"
 #endif
 
-	void		MEMMGR_enableLog(bool _enable);
-	void        *MEMMGR_malloc(size_t  _size,  const  char  *_filename,  int  _line);
-	void        *MEMMGR_realloc(void *_ptr, size_t  _size,  const  char  *_filename,  int  _line);
-	void 		*MEMMGR_calloc(size_t  _n_items,size_t  _size_item,  const  char  *_filename,  int  _line);
-	void        MEMMGR_free_from_malloc(void  *_ptr,  const  char  *_filename,  int  _line);
-	void		MEMMGR_free_c_pointer(void  *_ptr);
+MEMMGR_DLL_EXPORT	void		MEMMGR_enableLog(bool _enable);
+MEMMGR_DLL_EXPORT	void        *MEMMGR_malloc(size_t  _size,  const  char  *_filename,  int  _line);
+MEMMGR_DLL_EXPORT	void        *MEMMGR_realloc(void *_ptr, size_t  _size,  const  char  *_filename,  int  _line);
+MEMMGR_DLL_EXPORT	void 		*MEMMGR_calloc(size_t  _n_items,size_t  _size_item,  const  char  *_filename,  int  _line);
+MEMMGR_DLL_EXPORT	void        MEMMGR_free_from_malloc(void  *_ptr,  const  char  *_filename,  int  _line);
+MEMMGR_DLL_EXPORT	void		MEMMGR_free_c_pointer(void  *_ptr);
 	#define  malloc(p)                                      	MEMMGR_malloc(p,__FILE__,  __LINE__)
 	#define  calloc(n,s)                                      	MEMMGR_calloc(n,s,__FILE__,  __LINE__)
 	#define  realloc(p,s)                                      	MEMMGR_realloc(p,s,__FILE__,  __LINE__)
@@ -71,18 +93,18 @@
 		#  endif
 		#endif
 
-		bool		MEMMGR_push_file_line_new(const char *_filename,  int  _line);
-		bool		MEMMGR_push_file_line_delete(const char *_filename,  int  _line);
-		bool		MEMMGR_push_file_line_new_array(const char *_filename,  int  _line);
-		bool		MEMMGR_push_file_line_delete_array(const char *_filename,  int  _line);
+MEMMGR_DLL_EXPORT	bool		MEMMGR_push_file_line_new(const char *_filename,  int  _line);
+MEMMGR_DLL_EXPORT			bool		MEMMGR_push_file_line_delete(const char *_filename,  int  _line);
+MEMMGR_DLL_EXPORT			bool		MEMMGR_push_file_line_new_array(const char *_filename,  int  _line);
+MEMMGR_DLL_EXPORT			bool		MEMMGR_push_file_line_delete_array(const char *_filename,  int  _line);
 
 
-		void*  		operator  new(size_t  _size) _THROW_BAD_ALLOC;
-		void*  		operator  new[](size_t  _size) _THROW_BAD_ALLOC;
-		void   		operator  delete(void  *_ptr)  _NO_EXCEPT_TRUE;
+MEMMGR_DLL_EXPORT			void*  		operator  new(size_t  _size) _THROW_BAD_ALLOC;
+MEMMGR_DLL_EXPORT			void*  		operator  new[](size_t  _size) _THROW_BAD_ALLOC;
+MEMMGR_DLL_EXPORT			void   		operator  delete(void  *_ptr)  _NO_EXCEPT_TRUE;
 #if (__cplusplus >= 201402L) // delete (void  *_ptr, std::size_t _size) was introduced on std::c++14
-		void   		operator  delete(void  *_ptr, std::size_t _size)  _NO_EXCEPT_TRUE;
-		void   		operator  delete[](void  *_ptr, std::size_t _size)  _NO_EXCEPT_TRUE;
+MEMMGR_DLL_EXPORT			void   		operator  delete(void  *_ptr, std::size_t _size)  _NO_EXCEPT_TRUE;
+MEMMGR_DLL_EXPORT			void   		operator  delete[](void  *_ptr, std::size_t _size)  _NO_EXCEPT_TRUE;
 #endif
 
 #ifdef __APPLE__

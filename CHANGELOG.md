@@ -1,8 +1,15 @@
 ---
 Date: XXXX-XX-XX
-Version: 1.3.0
+Version: 1.4.0
+
 
 - [x] Implement MEMMGR_realloc
+
+---
+Date: 2025-11-03
+Version: 1.3.0
+
+- [x] compile as dinamic/static export
 
 ---
 Date: 2022-12-20

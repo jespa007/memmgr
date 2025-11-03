@@ -41,12 +41,16 @@ add_executable(test_c
 	${PROJECT_SOURCE_DIR}/test_c.c
 	${PROJECT_SOURCE_DIR}/memmgr.c
 )
+
+target_compile_definitions(test_c PUBLIC BUILD_STATIC_LIBS)
 target_link_libraries(test_c)
 
 add_executable(test_cpp
 	${PROJECT_SOURCE_DIR}/test_cpp.cpp
 	${PROJECT_SOURCE_DIR}/memmgr.cpp
 )
+
+target_compile_definitions(test_cpp PUBLIC BUILD_STATIC_LIBS)
 target_link_libraries(test_cpp)
 
 
