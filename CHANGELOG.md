@@ -9,7 +9,7 @@ Version: 1.4.0
 Date: 2025-11-03
 Version: 1.3.0
 
-- [x] compile as dinamic/static export
+- [x] Compile dinamic/static support
 
 ---
 Date: 2022-12-20
