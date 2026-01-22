@@ -244,6 +244,7 @@ void  MEMMGR_init(void)
 		MEMMGR_LOG_INFOF(__FILE__,__LINE__,"******************************");
 		MEMMGR_LOG_INFOF(__FILE__,__LINE__,"Memory management initialized!");
 		MEMMGR_LOG_INFOF(__FILE__,__LINE__,"******************************");
+		MEMMGR_LOG_INFO(__FILE__,__LINE__,"mem alloc : %iMb",(sizeof(g_allocated_pointer)+sizeof(g_free_pointer_idx))/(1024*1024));
 
 		atexit(MEMMGR_print_status);
 
