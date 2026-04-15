@@ -121,7 +121,9 @@ void  MEMMGR_get_filename(char  *filename, const char *absolute_filename)
 		return;
 	}
 
-	if((lenght = (strlen(absolute_filename)-1)) > 0)
+	lenght = (((int)strlen(absolute_filename)) - 1);
+
+	if(lenght > 0)
 	{
 
 		to_down_ptr = &absolute_filename[lenght-1];
@@ -302,7 +304,7 @@ void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,
 
 		((PointerPostHeapInfo  *)((char  *)heap_allocat+size_of_aligned_header+_size))->post_crc  =  random_number;
 
-		g_n_allocated_bytes  +=  _size;
+		g_n_allocated_bytes  +=  (int)_size;
 
 		pointer  =  ((char  *)heap_allocat+size_of_aligned_header);
 
@@ -384,7 +386,7 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line, int _alig
 	//-----------------------------------------------------------------
 	// DS delete element ...
 	//if(MEMMGR_dicotomic_delete((intptr_t)base_pointer)){
-	g_n_allocated_bytes-=preheap_allocat->size;
+	g_n_allocated_bytes -= (int)preheap_allocat->size;
 	g_n_allocated_pointers--;
 	free(base_pointer);
 	//}
