@@ -1,62 +1,25 @@
-cmake_minimum_required(VERSION 3.5)
- 
+# CMakeLists.txt
+#
+# Copyright 2021 by
+# Jordi Espada
+#
+# Say
+#
+#   cmake CMakeLists.txt
+#
+# to create a Makefile that builds a static version of the library.  For a
+# dynamic library, use
+#
+#   cmake CMakeLists.txt -DBUILD_SHARED_LIBS:BOOL=true
+#
+#
+# instead.  Please refer to the cmake manual for further options, in
+# particular, how to modify compilation and linking parameters.
+#
+
+cmake_minimum_required(VERSION 3.15)
+cmake_policy(SET CMP0091 NEW)	# To enable MSVC_RUNTIME_LIBRARY. It has effect only when policy CMP0091 is set to NEW prior to the first project() 
 project(memmgr)
 
-#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
-# COMPILE PARAMS
-#
- 
-MESSAGE("-- Install prefix: " ${CMAKE_INSTALL_PREFIX})
-
-
-if(MSVC)
-	MESSAGE ("-- Compiler: MSVC" )
-	MESSAGE ("-- Platform: Windows" )
-	
-	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-
-	#disable C4103 warning because is perfectly valid. Only MSVC complains about it
-	add_definitions(/wd4103)
-	add_definitions(/wd4800)
-	add_definitions(/wd4244)
-
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")  # g++ / gcc
-	SET( CMAKE_C_FLAGS	 " -pthread ")
-	SET( CMAKE_CXX_FLAGS 	 " -pthread -std=gnu++0x -g -O0")
-	
-endif()
- 
-
-#Redefine output dir ...
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
-
-
-#-----------------------------------------
-#
-# EXECUTABLES
-#
-
-add_executable(test_c
-	${PROJECT_SOURCE_DIR}/test_c.c
-	${PROJECT_SOURCE_DIR}/memmgr.c
-)
-
-target_compile_definitions(test_c PUBLIC BUILD_STATIC_LIBS)
-target_link_libraries(test_c)
-
-add_executable(test_cpp
-	${PROJECT_SOURCE_DIR}/test_cpp.cpp
-	${PROJECT_SOURCE_DIR}/memmgr.cpp
-)
-
-target_compile_definitions(test_cpp PUBLIC BUILD_STATIC_LIBS)
-target_link_libraries(test_cpp)
-
-
-
-
-
-
-
-
+# Recurse into the "src" subdirectories.
+add_subdirectory (src)

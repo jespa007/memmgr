@@ -1,6 +1,4 @@
-/bin/
 /.pydevproject
 /.settings/
 /build/
-*.exe
-/release/
+/bin/

@@ -1,9 +1,9 @@
 ---
-Date: XXXX-XX-XX
+Date: 2026-07-10
 Version: 1.4.0
 
-
 - [x] Implement MEMMGR_realloc
+- [x] Buld memgr library default as dynamic
 
 ---
 Date: 2025-11-03

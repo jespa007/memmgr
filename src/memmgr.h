@@ -1,9 +1,9 @@
-#ifndef __MEMMORY_MANNAGER_H__
-#define __MEMMORY_MANNAGER_H__
+#ifndef __MEMMGR_H__
+#define __MEMMGR_H__
 
-#define MEMMGR_MAJOR_VERSION 	1
-#define MEMMGR_MINOR_VERSION 	3
-#define MEMMGR_PATCH_VERSION 	0
+#define MEMMGR_VERSION_MAJOR	1
+#define MEMMGR_VERSION_MINOR	4
+#define MEMMGR_VERSION_PATCH	0
 
 #include	<stdlib.h>
 #include	<stdio.h>
