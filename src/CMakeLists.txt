@@ -25,7 +25,6 @@ string(REGEX MATCH "MEMMGR_VERSION_MAJOR([\t-\ ][0-9])*" _ ${memmgr_h})
 string(STRIP "${CMAKE_MATCH_1}" MEMMGR_VERSION_MAJOR)
 string(REGEX MATCH "MEMMGR_VERSION_MINOR([\t-\ ][0-9])*" _ ${memmgr_h})
 string(STRIP "${CMAKE_MATCH_1}" MEMMGR_VERSION_MINOR)
-
 string(REGEX MATCH "MEMMGR_VERSION_PATCH([\t-\ ][0-9])*" _ ${memmgr_h})
 string(STRIP "${CMAKE_MATCH_1}" MEMMGR_VERSION_PATCH)
 
@@ -33,7 +32,7 @@ string(STRIP "${CMAKE_MATCH_1}" MEMMGR_VERSION_PATCH)
 
 MESSAGE(STATUS "Memmgr ${MEMMGR_VERSION_MAJOR}.${MEMMGR_VERSION_MINOR}.${MEMMGR_VERSION_PATCH}" )
 
-SET(MEMMGR_C_LIB_NAME "memmgr-${MEMMGR_VERSION_MAJOR}-${MEMMGR_VERSION_MINOR}-${MEMMGR_VERSION_PATCH}")
+SET(MEMMGR_LIB_NAME "memmgr-${MEMMGR_VERSION_MAJOR}-${MEMMGR_VERSION_MINOR}-${MEMMGR_VERSION_PATCH}")
 SET(MEMMGR_CPP_LIB_NAME "memmgr-cpp-${MEMMGR_VERSION_MAJOR}-${MEMMGR_VERSION_MINOR}-${MEMMGR_VERSION_PATCH}")
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,7 +100,7 @@ endif()
 # Library
 
 
-set( MEMMGR_LIB_C_SRCS
+set( MEMMGR_LIB_SRCS
 	memmgr.c
 )
 
@@ -114,14 +113,11 @@ set( MEMMGR_LIB_CPP_SRCS
 # LINKING PARAMS
 #
 
-#Redefine output dir ...
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
-
 #set library generation as static by default
 if(BUILD_SHARED_LIBS)
-	add_library( ${MEMMGR_C_LIB_NAME}${POST_NAME} SHARED ${MEMMGR_LIB_C_SRCS} )
-	target_compile_definitions(${MEMMGR_C_LIB_NAME}${POST_NAME} PRIVATE BUILD_SHARED_LIBS)
-	target_link_libraries(${MEMMGR_C_LIB_NAME}${POST_NAME} ${LIBRARY_DEPS})
+	add_library( ${MEMMGR_LIB_NAME}${POST_NAME} SHARED ${MEMMGR_LIB_SRCS} )
+	target_compile_definitions(${MEMMGR_LIB_NAME}${POST_NAME} PRIVATE BUILD_SHARED_LIBS)
+	target_link_libraries(${MEMMGR_LIB_NAME}${POST_NAME} ${LIBRARY_DEPS})
 	
 	add_library( ${MEMMGR_CPP_LIB_NAME}${POST_NAME} SHARED ${MEMMGR_LIB_CPP_SRCS} )
 	target_compile_definitions(${MEMMGR_CPP_LIB_NAME}${POST_NAME} PRIVATE BUILD_SHARED_LIBS)
@@ -131,9 +127,9 @@ if(BUILD_SHARED_LIBS)
 else()
 	# static builds
 	
-	set( MEMMGR_C_LIB_NAME ${MEMMGR_C_LIB_NAME}-static)
-	add_library( ${MEMMGR_C_LIB_NAME}${POST_NAME} STATIC ${MEMMGR_LIB_C_SRCS} )
-	target_compile_definitions(${MEMMGR_C_LIB_NAME}${POST_NAME} PUBLIC BUILD_STATIC_LIBS)
+	set( MEMMGR_LIB_NAME ${MEMMGR_LIB_NAME}-static)
+	add_library( ${MEMMGR_LIB_NAME}${POST_NAME} STATIC ${MEMMGR_LIB_C_SRCS} )
+	target_compile_definitions(${MEMMGR_LIB_NAME}${POST_NAME} PUBLIC BUILD_STATIC_LIBS)
 	
 	set( MEMMGR_CPP_LIB_NAME ${MEMMGR_CPP_LIB_NAME}-static)
 	add_library( ${MEMMGR_CPP_LIB_NAME}${POST_NAME} STATIC ${MEMMGR_LIB_CPP_SRCS} )
@@ -149,19 +145,15 @@ endif()
 
 add_executable(test_c
 	${PROJECT_SOURCE_DIR}/../test/test_c.c
-	${PROJECT_SOURCE_DIR}/memmgr.c
 )
 
-target_compile_definitions(test_c PUBLIC BUILD_STATIC_LIBS)
-target_link_libraries(test_c)
+target_link_libraries(test_c ${MEMMGR_LIB_NAME}${POST_NAME})
 
 add_executable(test_cpp
 	${PROJECT_SOURCE_DIR}/../test/test_cpp.cpp
-	${PROJECT_SOURCE_DIR}/memmgr.cpp
 )
 
-target_compile_definitions(test_cpp PUBLIC BUILD_STATIC_LIBS)
-target_link_libraries(test_cpp)
+target_link_libraries(test_cpp ${MEMMGR_CPP_LIB_NAME}${POST_NAME} )
 
 #-----------------------------------------
 #
@@ -175,11 +167,11 @@ install(
         PATTERN "*.h"
 )
 
-INSTALL(TARGETS ${MEMMGR_C_LIB_NAME}${POST_NAME}
-		ARCHIVE DESTINATION  		${CMAKE_INSTALL_PREFIX}/lib
-		RUNTIME DESTINATION  		${CMAKE_INSTALL_PREFIX}/bin
-    	LIBRARY DESTINATION 		${CMAKE_INSTALL_PREFIX}/lib
-    	PUBLIC_HEADER DESTINATION	${CMAKE_INSTALL_PREFIX}/includes
+INSTALL(TARGETS ${MEMMGR_LIB_NAME}${POST_NAME}
+	ARCHIVE DESTINATION  		${CMAKE_INSTALL_PREFIX}/lib
+	RUNTIME DESTINATION  		${CMAKE_INSTALL_PREFIX}/bin
+	LIBRARY DESTINATION 		${CMAKE_INSTALL_PREFIX}/lib
+	PUBLIC_HEADER DESTINATION	${CMAKE_INSTALL_PREFIX}/includes
 )
 
 

@@ -45,12 +45,19 @@
 	#define	__FUNCTION__  "??"
 #endif
 
-MEMMGR_DLL_EXPORT	void		MEMMGR_enableLog(bool _enable);
-MEMMGR_DLL_EXPORT	void        *MEMMGR_malloc(size_t  _size,  const  char  *_filename,  int  _line);
-MEMMGR_DLL_EXPORT	void        *MEMMGR_realloc(void *_ptr, size_t  _size,  const  char  *_filename,  int  _line);
-MEMMGR_DLL_EXPORT	void 		*MEMMGR_calloc(size_t  _n_items,size_t  _size_item,  const  char  *_filename,  int  _line);
-MEMMGR_DLL_EXPORT	void        MEMMGR_free_from_malloc(void  *_ptr,  const  char  *_filename,  int  _line);
-MEMMGR_DLL_EXPORT	void		MEMMGR_free_c_pointer(void  *_ptr);
+#ifdef __cplusplus
+extern "C" {
+#endif
+	MEMMGR_DLL_EXPORT	void		MEMMGR_enableLog(bool _enable);
+	MEMMGR_DLL_EXPORT	void        *MEMMGR_malloc(size_t  _size,  const  char  *_filename,  int  _line);
+	MEMMGR_DLL_EXPORT	void        *MEMMGR_realloc(void *_ptr, size_t  _size,  const  char  *_filename,  int  _line);
+	MEMMGR_DLL_EXPORT	void 		*MEMMGR_calloc(size_t  _n_items,size_t  _size_item,  const  char  *_filename,  int  _line);
+	MEMMGR_DLL_EXPORT	void        MEMMGR_free_from_malloc(void  *_ptr,  const  char  *_filename,  int  _line);
+	MEMMGR_DLL_EXPORT	void		MEMMGR_free_c_pointer(void  *_ptr);
+#ifdef __cplusplus
+}
+#endif
+
 	#define  malloc(p)                                      	MEMMGR_malloc(p,__FILE__,  __LINE__)
 	#define  calloc(n,s)                                      	MEMMGR_calloc(n,s,__FILE__,  __LINE__)
 	#define  realloc(p,s)                                      	MEMMGR_realloc(p,s,__FILE__,  __LINE__)
