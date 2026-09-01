@@ -73,14 +73,14 @@ typedef enum{
 
 typedef  struct{
 	uintptr_t 	*ptr;
-	char  		filename[MEMMGR_MAX_FILENAME_LENGTH];
+	char  		filename[MEMMGR_MAX_FILENAME_LENGTH+1];
 	int  		line;
 }InfoAllocatedPointer;
 
 typedef  struct{
 	int		type_allocator;
 	int		offset_mempointer_table;
-	char	filename[MEMMGR_MAX_FILENAME_LENGTH];  //  base    		-16-256
+	char	filename[MEMMGR_MAX_FILENAME_LENGTH+1];  //  base    		-16-256
 	int		line;          					//  base          	-16
 	size_t	size;                      		//  base          	-8
 	int		pre_crc;                		//  base          	-4
@@ -170,7 +170,7 @@ void  MEMMGR_log(LogType _log_type, const char *_file, int _line, const  char  *
 		return;
 	}
 
-	char  filename[MEMMGR_MAX_FILENAME_LENGTH]="";
+	char  filename[MEMMGR_MAX_FILENAME_LENGTH+1]={0};
 	if(_file != NULL){
 		MEMMGR_get_filename(filename,  _file);
 	}
@@ -264,7 +264,7 @@ int  MEMMGR_get_free_cell_memptr_table(void)
 }
 //--------------------------------------------------------------------------------------------
 void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,  int  _line, int _aligment){
-	char  filename[MEMMGR_MAX_FILENAME_LENGTH];
+	char  filename[MEMMGR_MAX_FILENAME_LENGTH+1] = {0};
 	MEMMGR_get_filename(filename,  _absolute_filename);
 	// do not register
 	if(_size == 0){
@@ -448,7 +448,7 @@ void  MEMMGR_print_error_on_wrong_deallocate_method(const char *_filename, int _
 //----------------------------------------------------------------------------------------
 void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int  _line)
 {
-	char  filename[MEMMGR_MAX_FILENAME_LENGTH];
+	char  filename[MEMMGR_MAX_FILENAME_LENGTH+1] = {0};
 	MEMMGR_get_filename(filename,_absolute_filename);
 	PointerPreHeapInfo  *preheap_allocat  =  NULL;
 	PointerPostHeapInfo  *postheap_allocat  =  NULL;
