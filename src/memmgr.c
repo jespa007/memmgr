@@ -1,28 +1,14 @@
 #include	"memmgr.h"
+#include	"common.h"
 
+#define MEMMGR_PATTERN_ALLOCATED   0xCD  // newly allocated, uninitialized
+#define MEMMGR_PATTERN_FREED       0xDD  // freed memory
+#define MEMMGR_PATTERN_GUARD       0xFD  // guard/canary areas
+#define MEMMGR_PATTERN_REALLOC_OLD 0xEE  // optional
 
 //--------------------------------------------------------------------------------------------
 // DEFINES
-#define	MAX_MEMPOINTERS					80000
-#define	MEMMGR_MAX_FILENAME_LENGTH		256
-#define MEMMGR_MAX_STACK_FILE_LINE		32
 
-#define SIZEOF_ALIGNED_HEADER(_block_alignment) 		((sizeof(PointerPreHeapInfo)/(_block_alignment)+1)*(_block_alignment))
-
-#define GET_PREHEADER(p,a)								((PointerPreHeapInfo    *)((char  *)p-SIZEOF_ALIGNED_HEADER(a)))
-#define GET_POINTER(header_ptr,a)						((void    *)(((char  *)header_ptr+SIZEOF_ALIGNED_HEADER(a))))
-#define	GET_SIZE_PTR(p,a)								(GET_PREHEADER(p,a)->size)
-#define GET_POSTHEADER(p,a)								((PointerPostHeapInfo  *)((char  *)(p)+(GET_SIZE_PTR(p,a))))
-#define	KEY_NOT_FOUND									-1
-
-#define MEMMGR_LOG_INFO(file,line,s, ...)		MEMMGR_log(LOG_TYPE_INFO,file,line,s, __VA_ARGS__)
-#define MEMMGR_LOG_INFOF(file,line,s)			MEMMGR_LOG_INFO(file,line,s,NULL)
-
-#define MEMMGR_LOG_WARNING(file,line,s, ...)	MEMMGR_log(LOG_TYPE_WARNING,file,line,s, __VA_ARGS__)
-#define MEMMGR_LOG_WARNINGF(file,line,s)   		MEMMGR_LOG_WARNING(file,line,s,NULL)
-
-#define MEMMGR_LOG_ERROR(file,line,s, ...)		MEMMGR_log(LOG_TYPE_ERROR,file,line,s, __VA_ARGS__)
-#define MEMMGR_LOG_ERRORF(file,line,s)   		MEMMGR_LOG_ERROR(file,line,s,NULL)
 
 #define DEFAULT_C_ALIGNMENT	sizeof(void *)
 
@@ -54,42 +40,6 @@ typedef enum{
 	TERM_COLOR_WHITE = 7
 }TermColor;
 
-typedef enum{
-	UNKNOWN_ALLOCATE=0,
-	MALLOC_ALLOCATOR,  //  by  default
-	NEW_ALLOCATOR,
-	NEW_WITH_BRACETS_ALLOCATOR,
-	MAX_ALLOCATE_TYPES
-}ALLOCATOR_TYPE;
-
-typedef enum{
-	LOG_TYPE_INFO=0
-	,LOG_TYPE_WARNING
-	,LOG_TYPE_ERROR
-}LogType;
-
-//--------------------------------------------------------------------------------------------
-// STRUCTS
-
-typedef  struct{
-	uintptr_t 	*ptr;
-	char  		filename[MEMMGR_MAX_FILENAME_LENGTH+1];
-	int  		line;
-}InfoAllocatedPointer;
-
-typedef  struct{
-	int		type_allocator;
-	int		offset_mempointer_table;
-	char	filename[MEMMGR_MAX_FILENAME_LENGTH+1];  //  base    		-16-256
-	int		line;          					//  base          	-16
-	size_t	size;                      		//  base          	-8
-	int		pre_crc;                		//  base          	-4
-}PointerPreHeapInfo;
-
-typedef  struct{
-	int		post_crc;
-}PointerPostHeapInfo;
-
 //--------------------------------------------------------------------------------------------
 // GLOBAL VARS
 
@@ -105,7 +55,7 @@ static int 	g_n_free_pointers=0;
 
 
 
-static 	pthread_mutex_t mutex_main;
+static 	pthread_mutex_t mutex_main = PTHREAD_MUTEX_INITIALIZER;
 
 //--------------------------------------------------------------------------------------------
 static void  MEMMGR_print_status(void);
@@ -287,6 +237,12 @@ void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,
 			&&
 			((index  =  MEMMGR_get_free_cell_memptr_table())  !=  -1))
 	{
+
+		// set begin/end guard blocks
+		memset(heap_allocat ,MEMMGR_PATTERN_GUARD,size_of_aligned_header);
+		memset(heap_allocat+  _size,MEMMGR_PATTERN_GUARD,sizeof(PointerPostHeapInfo));
+
+		// copy data
 		strcpy(heap_allocat->filename,filename);
 		heap_allocat->size  =  _size;
 		heap_allocat->offset_mempointer_table  =  index;
@@ -313,8 +269,6 @@ void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,
 
 		//MEMMGR_LOG_INFO(NULL,0,"Current allocated pointers: %i of %i (%i%%)",g_n_allocated_pointers,MAX_MEMPOINTERS,(g_n_allocated_pointers*100/MAX_MEMPOINTERS));
 
-		//  memset  pointer
-		memset(pointer,0,_size);
 	}else{
 		MEMMGR_LOG_ERRORF(__FILE__,__LINE__,"Table full of pointers or not enough memory");
 	}
@@ -326,11 +280,24 @@ void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,
 }
 
 void 	*MEMMGR_malloc(size_t _size,  const  char  *_absolute_filename,  int  _line){
-	return MEMMGR_malloc_alignment(_size, _absolute_filename,_line,DEFAULT_C_ALIGNMENT);
+	void *p = MEMMGR_malloc_alignment(_size, _absolute_filename,_line,DEFAULT_C_ALIGNMENT);
+
+	//  memset  pointer
+	memset(p,MEMMGR_PATTERN_ALLOCATED,_size);
+
+	return p;
+
 }
 //--------------------------------------------------------------------------------------------
 void *MEMMGR_calloc(size_t  n_items,size_t  size_item,  const  char  *absolute_filename,  int  line){
-	return MEMMGR_malloc_alignment(n_items*size_item,absolute_filename,line,DEFAULT_C_ALIGNMENT);
+	size_t size = n_items*size_item;
+
+	void * p = MEMMGR_malloc_alignment(size,absolute_filename,line,DEFAULT_C_ALIGNMENT);
+
+	//  memset  pointer
+	memset(p,0,size);
+
+	return p;
 }
 //--------------------------------------------------------------------------------------------
 void  MEMMGR_free_c_pointer(void  *pointer){
@@ -388,6 +355,9 @@ void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line, int _alig
 	//if(MEMMGR_dicotomic_delete((intptr_t)base_pointer)){
 	g_n_allocated_bytes -= (int)preheap_allocat->size;
 	g_n_allocated_pointers--;
+
+	memset(base_pointer,MEMMGR_PATTERN_FREED,preheap_allocat->size);
+
 	free(base_pointer);
 	//}
 
@@ -396,41 +366,42 @@ MEMMGR_free_continue:
 	pthread_mutex_unlock(&mutex_main);
 }
 
-void *MEMMGR_realloc(void *ptr, size_t size,  const  char  *absolute_filename,  int  line) {
+void *MEMMGR_realloc(void *ptr, size_t _size,  const  char  *_filename,  int  _line) {
 
 
 	if (ptr==NULL) {
 		// NULL ptr. realloc should act like malloc.
-		return MEMMGR_malloc(size, absolute_filename, line);
+		return MEMMGR_malloc(_size, _filename, _line);
 	}
 
 
 	PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(ptr,DEFAULT_C_ALIGNMENT);
 
 
-	if ((size_t)pre_head->size >= size) {
+	if ((size_t)pre_head->size >= _size) {
 		// We have enough space. Could free some once we implement split.
 		return ptr;
 	}
 
 	// Need to really realloc. Malloc new space and free old space.
 	// Then copy old data to new space.
-	void * new_ptr=NULL;
-	new_ptr = MEMMGR_malloc(size, absolute_filename, line);
+	void * new_ptr=	MEMMGR_malloc_alignment(_size, _filename,_line,DEFAULT_C_ALIGNMENT);
+
+	//  memset  pointer
+	memset(new_ptr,MEMMGR_PATTERN_REALLOC_OLD,_size);
+	//new_ptr = MEMMGR_malloc(size, absolute_filename, line);
 
 	if (!new_ptr) {
 		return NULL; // TODO: set errno on failure.
 	}
+
 	memcpy(new_ptr, ptr, pre_head->size);
-	MEMMGR_free(ptr, absolute_filename, line,DEFAULT_C_ALIGNMENT);
+	MEMMGR_free(ptr, _filename, _line,DEFAULT_C_ALIGNMENT);
 
 	return new_ptr;
 }
 //--------------------------------------------------------------------------------------------
-void  MEMMGR_print_error_on_wrong_deallocate_method(const char *_filename, int _line,int  _allocator)
-{
-
-
+void  MEMMGR_print_error_on_wrong_deallocate_method(const char *_filename, int _line,int  _allocator){
 	switch(_allocator)
 	{
 	case  MALLOC_ALLOCATOR:

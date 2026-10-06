@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
  
 project(memmgr)
 
-option(BUILD_SHARED_LIBS "Build libraries as SHARED" ON)
+option(MEMMGR_SHARED_LIBS "Build libraries as SHARED" ON)
 
 
 IF( NOT CMAKE_BUILD_TYPE )
@@ -33,7 +33,7 @@ string(STRIP "${CMAKE_MATCH_1}" MEMMGR_VERSION_PATCH)
 MESSAGE(STATUS "Memmgr ${MEMMGR_VERSION_MAJOR}.${MEMMGR_VERSION_MINOR}.${MEMMGR_VERSION_PATCH}" )
 
 SET(MEMMGR_LIB_NAME "memmgr-${MEMMGR_VERSION_MAJOR}-${MEMMGR_VERSION_MINOR}-${MEMMGR_VERSION_PATCH}")
-SET(MEMMGR_CPP_LIB_NAME "memmgr-cpp-${MEMMGR_VERSION_MAJOR}-${MEMMGR_VERSION_MINOR}-${MEMMGR_VERSION_PATCH}")
+
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
@@ -102,9 +102,6 @@ endif()
 
 set( MEMMGR_LIB_SRCS
 	memmgr.c
-)
-
-set( MEMMGR_LIB_CPP_SRCS
 	memmgr.cpp
 )
 
@@ -114,26 +111,17 @@ set( MEMMGR_LIB_CPP_SRCS
 #
 
 #set library generation as static by default
-if(BUILD_SHARED_LIBS)
+if(MEMMGR_SHARED_LIBS)
 	add_library( ${MEMMGR_LIB_NAME}${POST_NAME} SHARED ${MEMMGR_LIB_SRCS} )
-	target_compile_definitions(${MEMMGR_LIB_NAME}${POST_NAME} PRIVATE BUILD_SHARED_LIBS)
+	target_compile_definitions(${MEMMGR_LIB_NAME}${POST_NAME} PRIVATE MEMMGR_SHARED_LIBS)
 	target_link_libraries(${MEMMGR_LIB_NAME}${POST_NAME} ${LIBRARY_DEPS})
-	
-	add_library( ${MEMMGR_CPP_LIB_NAME}${POST_NAME} SHARED ${MEMMGR_LIB_CPP_SRCS} )
-	target_compile_definitions(${MEMMGR_CPP_LIB_NAME}${POST_NAME} PRIVATE BUILD_SHARED_LIBS)
-	target_link_libraries(${MEMMGR_CPP_LIB_NAME}${POST_NAME} ${LIBRARY_DEPS})
-
 	
 else()
 	# static builds
 	
 	set( MEMMGR_LIB_NAME ${MEMMGR_LIB_NAME}-static)
-	add_library( ${MEMMGR_LIB_NAME}${POST_NAME} STATIC ${MEMMGR_LIB_C_SRCS} )
-	target_compile_definitions(${MEMMGR_LIB_NAME}${POST_NAME} PUBLIC BUILD_STATIC_LIBS)
-	
-	set( MEMMGR_CPP_LIB_NAME ${MEMMGR_CPP_LIB_NAME}-static)
-	add_library( ${MEMMGR_CPP_LIB_NAME}${POST_NAME} STATIC ${MEMMGR_LIB_CPP_SRCS} )
-	target_compile_definitions(${MEMMGR_CPP_LIB_NAME}${POST_NAME} PUBLIC BUILD_STATIC_LIBS)
+	add_library( ${MEMMGR_LIB_NAME}${POST_NAME} STATIC ${MEMMGR_LIB_SRCS} )
+	target_compile_definitions(${MEMMGR_LIB_NAME}${POST_NAME} PUBLIC MEMMGR_STATIC_LIBS)
 	
 endif()
 
@@ -153,7 +141,7 @@ add_executable(test_cpp
 	${PROJECT_SOURCE_DIR}/../test/test_cpp.cpp
 )
 
-target_link_libraries(test_cpp ${MEMMGR_CPP_LIB_NAME}${POST_NAME} )
+target_link_libraries(test_cpp ${MEMMGR_LIB_NAME}${POST_NAME} )
 
 #-----------------------------------------
 #

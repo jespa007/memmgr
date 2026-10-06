@@ -20,9 +20,9 @@
 #endif
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
-# if defined(BUILD_STATIC_LIBS)
+# if defined(MEMMGR_STATIC_LIBS)
 #  define MEMMGR_DLL_EXPORT
-# elif defined(BUILD_SHARED_LIBS)
+# elif defined(MEMMGR_SHARED_LIBS)
 #  define MEMMGR_DLL_EXPORT __declspec(dllexport)
 # else
 #  define MEMMGR_DLL_EXPORT __declspec(dllimport)
@@ -100,14 +100,14 @@ extern "C" {
 		#  endif
 		#endif
 
-MEMMGR_DLL_EXPORT	bool		MEMMGR_push_file_line_new(const char *_filename,  int  _line);
+MEMMGR_DLL_EXPORT			bool		MEMMGR_push_file_line_new(const char *_filename,  int  _line);
 MEMMGR_DLL_EXPORT			bool		MEMMGR_push_file_line_delete(const char *_filename,  int  _line);
 MEMMGR_DLL_EXPORT			bool		MEMMGR_push_file_line_new_array(const char *_filename,  int  _line);
 MEMMGR_DLL_EXPORT			bool		MEMMGR_push_file_line_delete_array(const char *_filename,  int  _line);
 
 
-MEMMGR_DLL_EXPORT			void*  		operator  new(size_t  _size) _THROW_BAD_ALLOC;
-MEMMGR_DLL_EXPORT			void*  		operator  new[](size_t  _size) _THROW_BAD_ALLOC;
+MEMMGR_DLL_EXPORT			void*  		operator  new(size_t  _size,const char *_file,int _line) _THROW_BAD_ALLOC;
+MEMMGR_DLL_EXPORT			void*  		operator  new[](size_t  _size,const char *_file,int _line) _THROW_BAD_ALLOC;
 MEMMGR_DLL_EXPORT			void   		operator  delete(void  *_ptr)  _NO_EXCEPT_TRUE;
 #if (__cplusplus >= 201402L) // delete (void  *_ptr, std::size_t _size) was introduced on std::c++14
 MEMMGR_DLL_EXPORT			void   		operator  delete(void  *_ptr, std::size_t _size)  _NO_EXCEPT_TRUE;
@@ -118,23 +118,7 @@ MEMMGR_DLL_EXPORT			void   		operator  delete[](void  *_ptr, std::size_t _size) 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wkeyword-macro"
 #endif
-		#define	new		                                    (MEMMGR_push_file_line_new(__FILE__,__LINE__),false)?NULL:new
-
-		///
-		/// Delete it fails in this situations:
-		///
-		/// 1. When deletes a NULL pointer: It invokes MEMMGR_push_file_line but delete() or delete[]() operator is not called, so
-		///    it increments its counter delete refs
-		/// 2. The procedure on delete is the following:
-		///    1st: It captures current file line by calling MEMMGR_push_file_line_delete
-		///    2nd: It calls object destructor (i.e Object::~Object)
-		///    3rd: It call overrided delete[],delete operator
-		///
-		///    On the 1st and 3rd steps there's a mutex_lock that blocks temporally counter and file/line refs to set and get current
-		///    file/line where delete operator was invoked. During the destructor call (2nd step)  destructor can call other deletes
-		//     and become mismatched file/line
-
-		#define	delete		  		                        (MEMMGR_push_file_line_delete(__FILE__,__LINE__),false)?abort(): delete
+	#define new new(__FILE__, __LINE__)
 
 #ifdef __APPLE__
 #pragma GCC diagnostic pop

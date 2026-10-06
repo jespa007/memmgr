@@ -1,4 +1,5 @@
-#include "memmgr.c"
+#include "memmgr.h"
+#include "common.h"
 
 #undef	new
 #undef	delete
@@ -9,11 +10,10 @@
 //---------
 // DELETE
 
-
 static char registered_file_new[MEMMGR_MAX_STACK_FILE_LINE][MEMMGR_MAX_FILENAME_LENGTH]={0};
 static int 	registered_line_new[MEMMGR_MAX_STACK_FILE_LINE]={-1};
 static int 	n_registered_file_line_new=0;
-static 		pthread_mutex_t mutex_file_line_new;
+static 		pthread_mutex_t mutex_file_line_new = PTHREAD_MUTEX_INITIALIZER;
 
 bool	MEMMGR_push_file_line_new(const  char  *absolute_filename,   int   line)
 {
@@ -40,7 +40,7 @@ bool	MEMMGR_push_file_line_new(const  char  *absolute_filename,   int   line)
 static char registered_file_delete[MEMMGR_MAX_STACK_FILE_LINE][MEMMGR_MAX_FILENAME_LENGTH]={0};
 static int 	registered_line_delete[MEMMGR_MAX_STACK_FILE_LINE]={-1};
 static int 	n_registered_file_line_delete=0;
-static 		pthread_mutex_t mutex_file_line_delete;
+static 		pthread_mutex_t mutex_file_line_delete = PTHREAD_MUTEX_INITIALIZER;
 
 bool	MEMMGR_push_file_line_delete(const  char  *absolute_filename,   int   line)\
 {
@@ -65,8 +65,7 @@ bool	MEMMGR_push_file_line_delete(const  char  *absolute_filename,   int   line)
 //DEFINE_PUSH_FILE_LINE_TYPE(_new)
 //DEFINE_PUSH_FILE_LINE_TYPE(_delete)
 
-void*  operator  new(size_t  _size) _THROW_BAD_ALLOC
-{
+void*  operator  new(size_t  _size, const char *_file, int _line) _THROW_BAD_ALLOC {
 
 	char source_file[MEMMGR_MAX_FILENAME_LENGTH]={"??"};
 	int source_line=0;
@@ -102,7 +101,7 @@ void*  operator  new(size_t  _size) _THROW_BAD_ALLOC
 	return  pointer;
 }
 //--------------------------------------------------------------------------------------------
-void*  operator  new[](size_t  _size) _THROW_BAD_ALLOC
+void*  operator  new[](size_t  _size, const char *_file, int _line) _THROW_BAD_ALLOC
 {
 	/*if(n_registered_file_line==0){
 		return malloc(size);
