@@ -100,16 +100,11 @@ extern "C" {
 		#  endif
 		#endif
 
-MEMMGR_DLL_EXPORT			bool		MEMMGR_push_file_line_new(const char *_filename,  int  _line);
-MEMMGR_DLL_EXPORT			bool		MEMMGR_push_file_line_delete(const char *_filename,  int  _line);
-MEMMGR_DLL_EXPORT			bool		MEMMGR_push_file_line_new_array(const char *_filename,  int  _line);
-MEMMGR_DLL_EXPORT			bool		MEMMGR_push_file_line_delete_array(const char *_filename,  int  _line);
-
-
 MEMMGR_DLL_EXPORT			void*  		operator  new(size_t  _size,const char *_file,int _line) _THROW_BAD_ALLOC;
 MEMMGR_DLL_EXPORT			void*  		operator  new[](size_t  _size,const char *_file,int _line) _THROW_BAD_ALLOC;
 MEMMGR_DLL_EXPORT			void   		operator  delete(void  *_ptr)  _NO_EXCEPT_TRUE;
-#if (__cplusplus >= 201402L) // delete (void  *_ptr, std::size_t _size) was introduced on std::c++14
+MEMMGR_DLL_EXPORT 			void 		operator delete[](void *_ptr) _NO_EXCEPT_TRUE;
+#if defined(__cpp_sized_deallocation) || (__cplusplus >= 201402L)
 MEMMGR_DLL_EXPORT			void   		operator  delete(void  *_ptr, std::size_t _size)  _NO_EXCEPT_TRUE;
 MEMMGR_DLL_EXPORT			void   		operator  delete[](void  *_ptr, std::size_t _size)  _NO_EXCEPT_TRUE;
 #endif

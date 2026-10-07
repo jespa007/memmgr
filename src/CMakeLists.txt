@@ -80,7 +80,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")  # g++ / gcc
 
  	 
 	SET( CMAKE_C_FLAGS	 " ${CMAKE_COMPILE_COMMON} -std=c99 -Wstrict-prototypes  ")
-	SET( CMAKE_CXX_FLAGS 	 " ${CMAKE_COMPILE_COMMON} -std=gnu++0x ")
+	SET( CMAKE_CXX_FLAGS 	 " ${CMAKE_COMPILE_COMMON} ")
 	
 	#Redefine output dir ...
 	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../bin/gcc/${CMAKE_BUILD_TYPE})
@@ -88,6 +88,10 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")  # g++ / gcc
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../bin/gcc/${CMAKE_BUILD_TYPE})
 	LINK_DIRECTORIES(${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})		
 endif()
+
+# Compile memmgr with C++11 but add optional standard compliance.
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #
 # COMPILE PARAMS

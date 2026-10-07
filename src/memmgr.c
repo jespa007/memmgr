@@ -45,7 +45,7 @@ typedef enum{
 
 static bool g_enable_log=true;
 
-static int	g_n_allocated_bytes  =  0;
+static size_t g_n_allocated_bytes  =  0;
 static int	g_n_allocated_pointers  =  0;
 static bool	g_memmgr_was_init  =  false;
 
@@ -193,10 +193,10 @@ void  MEMMGR_init(void)
 			g_free_pointer_idx[i]=MAX_MEMPOINTERS-1-i;
 		}
 
-		MEMMGR_LOG_INFOF(__FILE__,__LINE__,"******************************");
-		MEMMGR_LOG_INFOF(__FILE__,__LINE__,"Memory management initialized!");
-		MEMMGR_LOG_INFOF(__FILE__,__LINE__,"******************************");
-		MEMMGR_LOG_INFO(__FILE__,__LINE__,"mem alloc : %iMb",(sizeof(g_allocated_pointer)+sizeof(g_free_pointer_idx))/(1024*1024));
+		MEMMGR_LOG_INFO(__FILE__,__LINE__,"******************************");
+		MEMMGR_LOG_INFO(__FILE__,__LINE__,"Memory management initialized!");
+		MEMMGR_LOG_INFO(__FILE__,__LINE__,"******************************");
+		MEMMGR_LOG_INFOF(__FILE__,__LINE__,"mem alloc : %iMb",(sizeof(g_allocated_pointer)+sizeof(g_free_pointer_idx))/(1024*1024));
 
 		atexit(MEMMGR_print_status);
 
@@ -212,13 +212,95 @@ int  MEMMGR_get_free_cell_memptr_table(void)
 	}
 	return KEY_NOT_FOUND; // no memory free...
 }
+
+static int MEMMGR_find_pointer_index(void *_ptr) {
+    int i;
+
+    if(_ptr == NULL){
+        return -1;
+    }
+
+    for(i = 0; i < MAX_MEMPOINTERS; ++i){
+        PointerPreHeapInfo *pre_header = g_allocated_pointer[i];
+
+        if(pre_header == NULL){
+            continue;
+        }
+
+        void *user_pointer = GET_POINTER(
+            pre_header,
+            pre_header->alignment
+        );
+
+        if(user_pointer == _ptr){
+            return i;
+        }
+    }
+
+    return -1;
+}
+/*
+static int MEMMGR_find_containing_pointer_index(void *_ptr)
+{
+    int i;
+
+    if(_ptr == NULL){
+        return -1;
+    }
+
+    for(i = 0; i < MAX_MEMPOINTERS; ++i){
+        PointerPreHeapInfo *pre_header = g_allocated_pointer[i];
+
+        if(pre_header == NULL){
+            continue;
+        }
+
+        char *user_begin = (char *)GET_POINTER(
+            pre_header,
+            pre_header->alignment
+        );
+
+        char *user_end = user_begin + pre_header->size;
+
+        if((char *)_ptr > user_begin && (char *)_ptr < user_end){
+            return i;
+        }
+    }
+
+    return -1;
+}*/
+
+bool MEMMGR_owns_pointer(void *_ptr)
+{
+    bool owns_pointer;
+
+    pthread_mutex_lock(&mutex_main);
+
+    owns_pointer = MEMMGR_find_pointer_index(_ptr) >= 0;
+
+    pthread_mutex_unlock(&mutex_main);
+
+    return owns_pointer;
+}
+
+static const char * MEMMGR_get_allocator_name(int _type_allocator){
+	switch(_type_allocator){
+	case MALLOC_ALLOCATOR: return "MALLOC_ALLOCATOR";
+	case NEW_ALLOCATOR: return "NEW_ALLOCATOR";
+	case NEW_WITH_BRACETS_ALLOCATOR: return "NEW_WITH_BRACETS_ALLOCATOR";
+	}
+
+	return "UNKNOWN_ALLOCATOR";
+}
+
+
 //--------------------------------------------------------------------------------------------
-void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,  int  _line, int _aligment){
+void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,  int  _line, size_t _aligment){
 	char  filename[MEMMGR_MAX_FILENAME_LENGTH+1] = {0};
 	MEMMGR_get_filename(filename,  _absolute_filename);
 	// do not register
 	if(_size == 0){
-		MEMMGR_LOG_WARNINGF(filename,_line,"Try to allocate pointer with 0 bytes");
+		MEMMGR_LOG_WARNING(filename,_line,"Try to allocate pointer with 0 bytes");
 		return NULL;
 	}
 
@@ -229,10 +311,16 @@ void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,
 	int  random_number,index;
 
 
-	if(!g_memmgr_was_init)  MEMMGR_init();  //  auto_inicialize  return  malloc(size);
+	if(!g_memmgr_was_init)  {
+		MEMMGR_init();  //  auto_inicialize  return  malloc(size);
+	}
 
 	size_t size_of_aligned_header=SIZEOF_ALIGNED_HEADER(_aligment);
+
 	heap_allocat  =  (PointerPreHeapInfo  *)malloc(size_of_aligned_header    +  _size +  sizeof(PointerPostHeapInfo));
+
+
+
 	if(heap_allocat
 			&&
 			((index  =  MEMMGR_get_free_cell_memptr_table())  !=  -1))
@@ -240,12 +328,13 @@ void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,
 
 		// set begin/end guard blocks
 		memset(heap_allocat ,MEMMGR_PATTERN_GUARD,size_of_aligned_header);
-		memset(heap_allocat+  _size,MEMMGR_PATTERN_GUARD,sizeof(PointerPostHeapInfo));
+		memset((uint8_t *)heap_allocat+ size_of_aligned_header + _size,MEMMGR_PATTERN_GUARD,sizeof(PointerPostHeapInfo));
 
 		// copy data
 		strcpy(heap_allocat->filename,filename);
 		heap_allocat->size  =  _size;
 		heap_allocat->offset_mempointer_table  =  index;
+		heap_allocat->alignment = _aligment;
 
 
 		heap_allocat->line  =  _line;
@@ -258,19 +347,24 @@ void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,
 
 		g_allocated_pointer[index] 	    = heap_allocat;
 
-		((PointerPostHeapInfo  *)((char  *)heap_allocat+size_of_aligned_header+_size))->post_crc  =  random_number;
+		((PointerPostHeapInfo  *)((uint8_t  *)heap_allocat+size_of_aligned_header+_size))->post_crc  =  random_number;
 
 		g_n_allocated_bytes  +=  (int)_size;
 
-		pointer  =  ((char  *)heap_allocat+size_of_aligned_header);
+		pointer  =  ((uint8_t  *)heap_allocat+size_of_aligned_header);
 
 		g_n_allocated_pointers++;
 		g_n_free_pointers--;
 
-		//MEMMGR_LOG_INFO(NULL,0,"Current allocated pointers: %i of %i (%i%%)",g_n_allocated_pointers,MAX_MEMPOINTERS,(g_n_allocated_pointers*100/MAX_MEMPOINTERS));
+		//MEMMGR_LOG_INFOF(NULL,0,"Current allocated pointers: %i of %i (%i%%)",g_n_allocated_pointers,MAX_MEMPOINTERS,(g_n_allocated_pointers*100/MAX_MEMPOINTERS));
 
 	}else{
-		MEMMGR_LOG_ERRORF(__FILE__,__LINE__,"Table full of pointers or not enough memory");
+
+	    if(heap_allocat != NULL){
+	        free(heap_allocat);
+	    }
+
+		MEMMGR_LOG_ERROR(__FILE__,__LINE__,"Table full of pointers or not enough memory");
 	}
 
 	//malloc_mutex.unlock();
@@ -283,19 +377,33 @@ void 	*MEMMGR_malloc(size_t _size,  const  char  *_absolute_filename,  int  _lin
 	void *p = MEMMGR_malloc_alignment(_size, _absolute_filename,_line,DEFAULT_C_ALIGNMENT);
 
 	//  memset  pointer
-	memset(p,MEMMGR_PATTERN_ALLOCATED,_size);
+	if( p != NULL){
+		memset(p,MEMMGR_PATTERN_ALLOCATED,_size);
+	}
 
 	return p;
 
 }
 //--------------------------------------------------------------------------------------------
 void *MEMMGR_calloc(size_t  n_items,size_t  size_item,  const  char  *absolute_filename,  int  line){
+	if(size_item != 0 && n_items > SIZE_MAX / size_item){
+	    MEMMGR_LOG_ERROR(
+	        absolute_filename,
+	        line,
+	        "calloc size overflow"
+	    );
+
+	    return NULL;
+	}
+
 	size_t size = n_items*size_item;
 
 	void * p = MEMMGR_malloc_alignment(size,absolute_filename,line,DEFAULT_C_ALIGNMENT);
 
 	//  memset  pointer
-	memset(p,0,size);
+	if(p != NULL){
+		memset(p,0,size);
+	}
 
 	return p;
 }
@@ -305,65 +413,75 @@ void  MEMMGR_free_c_pointer(void  *pointer){
 }
 
 //--------------------------------------------------------------------------------------------
-void  MEMMGR_free(void  *pointer,  const  char  *filename,  int  line, int _alignment){
+void MEMMGR_free(
+    void *_ptr,
+    const char *_filename,
+    int _line,
+    size_t _alignment,
+    int _expected_allocator
+){
+    int pointer_idx;
+    PointerPreHeapInfo *pre_header;
+    void *base_pointer;
 
-	//std::lock_guard<std::mutex> lg(mutex_main);
-	pthread_mutex_lock(&mutex_main);
+    if(_ptr == NULL){
+        return;
+    }
 
-	PointerPreHeapInfo    *preheap_allocat    =  NULL;
-	PointerPostHeapInfo  *postheap_allocat  =  NULL;
-	void  *base_pointer;
+    pthread_mutex_lock(&mutex_main);
 
-	if(pointer == NULL){
-		MEMMGR_LOG_ERRORF(filename,line,"Trying to deallocate NULL pointer");
-		goto MEMMGR_free_continue;
-	}
+    pointer_idx = MEMMGR_find_pointer_index(_ptr);
 
+    if(pointer_idx < 0){
+        pthread_mutex_unlock(&mutex_main);
 
-	//  Getheaders...
-	base_pointer  =  preheap_allocat    =  GET_PREHEADER(pointer,_alignment);
-	postheap_allocat  =  GET_POSTHEADER(pointer,_alignment);
+        MEMMGR_LOG_ERRORF(
+            _filename,
+            _line,
+            "Pointer was not allocated by MEMMGR: %p",
+            _ptr
+        );
 
-	//  Check  headers...
-	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
-	{
-		MEMMGR_LOG_ERRORF(filename,line,"free():Trying to deallocate a pointer with CRC error. Either is a corrupted pointer or not managed pointer!");
-		goto MEMMGR_free_continue;
-	}
+        return;
+    }
 
-	if(preheap_allocat->offset_mempointer_table  <  0  ||  preheap_allocat->offset_mempointer_table  >=  MAX_MEMPOINTERS)
-	{
-		MEMMGR_LOG_ERRORF(filename,line,"Bad  index  mem  table");
-		goto MEMMGR_free_continue;
-	}
+    pre_header = g_allocated_pointer[pointer_idx];
 
-	//  deallocate  pointer  will  be  ok  :)
+    /*
+     * Now it is safe to read headers because we know the pointer
+     * belongs to MEMMGR.
+     */
+    if(pre_header->type_allocator != _expected_allocator){
+        pthread_mutex_unlock(&mutex_main);
 
-	//  Mark  freed...
-	g_allocated_pointer[preheap_allocat->offset_mempointer_table]  =  NULL;
+        MEMMGR_LOG_ERRORF(
+            _filename,
+            _line,
+            "Allocator mismatch. Allocated with %s, freed with %s",
+            MEMMGR_get_allocator_name(pre_header->type_allocator),
+            MEMMGR_get_allocator_name(_expected_allocator)
+        );
 
-	if(g_n_free_pointers>=(MAX_MEMPOINTERS-1)){
-		MEMMGR_LOG_ERRORF(__FILE__,__LINE__,"Reached max table of free pointers!");
-		goto MEMMGR_free_continue;
-	}
+        return;
+    }
 
-	g_n_free_pointers++;
-	g_free_pointer_idx[g_n_free_pointers] = preheap_allocat->offset_mempointer_table;
+    /*
+     * Check corruption here.
+     */
 
-	//-----------------------------------------------------------------
-	// DS delete element ...
-	//if(MEMMGR_dicotomic_delete((intptr_t)base_pointer)){
-	g_n_allocated_bytes -= (int)preheap_allocat->size;
-	g_n_allocated_pointers--;
+    g_allocated_pointer[pointer_idx] = NULL;
 
-	memset(base_pointer,MEMMGR_PATTERN_FREED,preheap_allocat->size);
+    base_pointer = pre_header;
 
-	free(base_pointer);
-	//}
+    size_t total_size = SIZEOF_ALIGNED_HEADER(_alignment)
+        + pre_header->size
+        + sizeof(PointerPostHeapInfo);
 
-MEMMGR_free_continue:
+    memset(base_pointer, MEMMGR_PATTERN_FREED, total_size);
 
-	pthread_mutex_unlock(&mutex_main);
+    pthread_mutex_unlock(&mutex_main);
+
+    free(base_pointer);
 }
 
 void *MEMMGR_realloc(void *ptr, size_t _size,  const  char  *_filename,  int  _line) {
@@ -372,6 +490,11 @@ void *MEMMGR_realloc(void *ptr, size_t _size,  const  char  *_filename,  int  _l
 	if (ptr==NULL) {
 		// NULL ptr. realloc should act like malloc.
 		return MEMMGR_malloc(_size, _filename, _line);
+	}
+
+	if(_size == 0){
+	    MEMMGR_free(ptr, _filename, _line, DEFAULT_C_ALIGNMENT, MALLOC_ALLOCATOR);
+	    return NULL;
 	}
 
 
@@ -396,26 +519,10 @@ void *MEMMGR_realloc(void *ptr, size_t _size,  const  char  *_filename,  int  _l
 	}
 
 	memcpy(new_ptr, ptr, pre_head->size);
-	MEMMGR_free(ptr, _filename, _line,DEFAULT_C_ALIGNMENT);
+	MEMMGR_free(ptr, _filename, _line,DEFAULT_C_ALIGNMENT,MALLOC_ALLOCATOR);
 
 	return new_ptr;
 }
-//--------------------------------------------------------------------------------------------
-void  MEMMGR_print_error_on_wrong_deallocate_method(const char *_filename, int _line,int  _allocator){
-	switch(_allocator)
-	{
-	case  MALLOC_ALLOCATOR:
-		MEMMGR_LOG_ERRORF(_filename,  _line,"Allocated_pointer must freed  with  function  free()");
-		break;
-	case  NEW_ALLOCATOR:
-		MEMMGR_LOG_ERRORF(_filename,  _line,"Allocated_pointer must freed  with  operator  delete");
-		break;
-	case  NEW_WITH_BRACETS_ALLOCATOR:
-		MEMMGR_LOG_ERRORF(_filename,  _line,"Allocated_pointer must freed  with  operator  delete[]");
-		break;
-	}
-}
-
 //----------------------------------------------------------------------------------------
 void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int  _line)
 {
@@ -427,7 +534,7 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int 
 
 	if(p == NULL)
 	{
-		MEMMGR_LOG_WARNINGF(filename,  _line,"NULL  pointer  to  deallocate");
+		MEMMGR_LOG_WARNING(filename,  _line,"NULL  pointer  to  deallocate");
 		return;
 	}
 
@@ -437,18 +544,11 @@ void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int 
 	//  Check  headers...
 	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
 	{
-		MEMMGR_LOG_ERRORF(filename,_line,"Bad  crc  pointer");
+		MEMMGR_LOG_ERROR(filename,_line,"Bad  crc  pointer");
 		return;
 	}
 
-	if(preheap_allocat->type_allocator  !=  MALLOC_ALLOCATOR)
-	{
-		MEMMGR_print_error_on_wrong_deallocate_method(filename, _line,preheap_allocat->type_allocator);
-		return;
-
-	}
-
-	MEMMGR_free(p,  filename,  _line, DEFAULT_C_ALIGNMENT);
+	MEMMGR_free(p,  filename,  _line, DEFAULT_C_ALIGNMENT,MALLOC_ALLOCATOR);
 }
 //--------------------------------------------------------------------------------------------
 void  MEMMGR_print_status(void)
@@ -467,7 +567,7 @@ void  MEMMGR_print_status(void)
 				allocated_bytes+=preheap_allocat->size;
 				pointers_to_deallocate++;
 				void *pointer=GET_POINTER(preheap_allocat,DEFAULT_C_ALIGNMENT);//((char *)preheap_allocat)+sizeof(PointerPreHeapInfo);
-				MEMMGR_LOG_ERROR(preheap_allocat->filename,  preheap_allocat->line,"Allocated  pointer  NOT  DEALLOCATED (%p)",pointer);
+				MEMMGR_LOG_ERRORF(preheap_allocat->filename,  preheap_allocat->line,"Allocated  pointer  NOT  DEALLOCATED (%p)",pointer);
 			}
 		}
 	}
@@ -475,12 +575,12 @@ void  MEMMGR_print_status(void)
 	//-----
 	if(pointers_to_deallocate>0  ||  allocated_bytes>0)
 	{
-		MEMMGR_LOG_ERROR(__FILE__,__LINE__,"Bytes  to  deallocate  =  %i  bytes",allocated_bytes);
-		MEMMGR_LOG_ERROR(__FILE__,__LINE__,"Mempointers  to  deallocate  =  %i",pointers_to_deallocate);
+		MEMMGR_LOG_ERRORF(__FILE__,__LINE__,"Bytes  to  deallocate  =  %i  bytes",allocated_bytes);
+		MEMMGR_LOG_ERRORF(__FILE__,__LINE__,"Mempointers  to  deallocate  =  %i",pointers_to_deallocate);
 	}
 	else
 	{
-		MEMMGR_LOG_INFOF(__FILE__,__LINE__,"MEMRAM OK");
+		MEMMGR_LOG_INFO(__FILE__,__LINE__,"MEMRAM OK");
 	}
 }
 
