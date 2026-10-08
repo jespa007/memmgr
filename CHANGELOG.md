@@ -1,4 +1,16 @@
 ---
+Date: 2026-10-08
+Version: 1.5.0
+
+- [x] Build only one library instead of one for cpp and c
+- [x] Get rid stack file/line mutex
+- [x] Now only "new" it retrieves file/line, and delete overrides implementation (no macro)
+- [x] Implements a way to check whether the pointer is owned in the memmanager or not (avoid seg faults)
+- [x] store alignment in pointer struct info
+- [x] Get rid extra headers
+- [x] Improve compatibility through C++ new/delete alloc operator signatures
+
+---
 Date: 2026-07-10
 Version: 1.4.0
 

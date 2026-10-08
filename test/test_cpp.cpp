@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #ifdef __WIN32__
 #include <synchapi.h>
 #endif

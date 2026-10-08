@@ -1,10 +1,21 @@
-#include	"memmgr.h"
 #include	"common.h"
+
+#include	<stdlib.h>
+#include	<stdio.h>
+#include	<string.h>
+#include	<memory.h>
+#include	<stdarg.h>
+#include	<pthread.h>
+
+#ifdef _WIN32
+#include	<windows.h>
+#endif
+
 
 #define MEMMGR_PATTERN_ALLOCATED   0xCD  // newly allocated, uninitialized
 #define MEMMGR_PATTERN_FREED       0xDD  // freed memory
 #define MEMMGR_PATTERN_GUARD       0xFD  // guard/canary areas
-#define MEMMGR_PATTERN_REALLOC_OLD 0xEE  // optional
+#define MEMMGR_PATTERN_REALLOC_NEW 0xEE  // optional
 
 //--------------------------------------------------------------------------------------------
 // DEFINES
@@ -270,8 +281,7 @@ static int MEMMGR_find_containing_pointer_index(void *_ptr)
     return -1;
 }*/
 
-bool MEMMGR_owns_pointer(void *_ptr)
-{
+bool MEMMGR_owns_pointer(void *_ptr) {
     bool owns_pointer;
 
     pthread_mutex_lock(&mutex_main);
@@ -295,11 +305,16 @@ static const char * MEMMGR_get_allocator_name(int _type_allocator){
 
 
 //--------------------------------------------------------------------------------------------
-void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,  int  _line, size_t _aligment){
+void 	*MEMMGR_malloc_alignment(size_t  _size, size_t _aligment,  const  char  *_absolute_filename,  int  _line){
 	char  filename[MEMMGR_MAX_FILENAME_LENGTH+1] = {0};
 	MEMMGR_get_filename(filename,  _absolute_filename);
 	// do not register
 	if(_size == 0){
+		MEMMGR_LOG_WARNING(filename,_line,"Try to allocate pointer with 0 bytes");
+		return NULL;
+	}
+
+	if(_aligment == 0){
 		MEMMGR_LOG_WARNING(filename,_line,"Try to allocate pointer with 0 bytes");
 		return NULL;
 	}
@@ -318,7 +333,6 @@ void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,
 	size_t size_of_aligned_header=SIZEOF_ALIGNED_HEADER(_aligment);
 
 	heap_allocat  =  (PointerPreHeapInfo  *)malloc(size_of_aligned_header    +  _size +  sizeof(PointerPostHeapInfo));
-
 
 
 	if(heap_allocat
@@ -374,7 +388,7 @@ void 	*MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,
 }
 
 void 	*MEMMGR_malloc(size_t _size,  const  char  *_absolute_filename,  int  _line){
-	void *p = MEMMGR_malloc_alignment(_size, _absolute_filename,_line,DEFAULT_C_ALIGNMENT);
+	void *p = MEMMGR_malloc_alignment(_size,DEFAULT_C_ALIGNMENT, _absolute_filename,_line);
 
 	//  memset  pointer
 	if( p != NULL){
@@ -398,7 +412,7 @@ void *MEMMGR_calloc(size_t  n_items,size_t  size_item,  const  char  *absolute_f
 
 	size_t size = n_items*size_item;
 
-	void * p = MEMMGR_malloc_alignment(size,absolute_filename,line,DEFAULT_C_ALIGNMENT);
+	void * p = MEMMGR_malloc_alignment(size,DEFAULT_C_ALIGNMENT,absolute_filename,line);
 
 	//  memset  pointer
 	if(p != NULL){
@@ -447,6 +461,17 @@ void MEMMGR_free(
 
     pre_header = g_allocated_pointer[pointer_idx];
 
+	if(pre_header->alignment == 0){
+		pthread_mutex_unlock(&mutex_main);
+
+	    MEMMGR_LOG_ERROR(
+	        __FILE__,
+	        __LINE__,
+	        "Invalid allocation header: alignment is zero"
+	    );
+	    return;
+	}
+
     /*
      * Now it is safe to read headers because we know the pointer
      * belongs to MEMMGR.
@@ -468,14 +493,30 @@ void MEMMGR_free(
     /*
      * Check corruption here.
      */
+    PointerPostHeapInfo *post_header = GET_POSTHEADER(
+        _ptr,
+        pre_header->alignment
+    );
+
+    if(pre_header->pre_crc != post_header->post_crc){
+        pthread_mutex_unlock(&mutex_main);
+
+        MEMMGR_LOG_ERROR(
+            _filename,
+            _line,
+            "CRC error. Memory corruption detected."
+        );
+
+        return;
+    }
 
     g_allocated_pointer[pointer_idx] = NULL;
 
     base_pointer = pre_header;
 
-    size_t total_size = SIZEOF_ALIGNED_HEADER(_alignment)
-        + pre_header->size
-        + sizeof(PointerPostHeapInfo);
+    size_t total_size = SIZEOF_ALIGNED_HEADER(pre_header->alignment)
+        				+ pre_header->size
+						+ sizeof(PointerPostHeapInfo);
 
     memset(base_pointer, MEMMGR_PATTERN_FREED, total_size);
 
@@ -484,75 +525,146 @@ void MEMMGR_free(
     free(base_pointer);
 }
 
-void *MEMMGR_realloc(void *ptr, size_t _size,  const  char  *_filename,  int  _line) {
+void *MEMMGR_realloc(
+    void *ptr,
+    size_t _size,
+    const char *_filename,
+    int _line
+){
+    PointerPreHeapInfo *pre_head = NULL;
+    PointerPreHeapInfo *new_pre_head = NULL;
+    int pointer_idx;
+    size_t old_size;
+    size_t old_alignment;
 
+    if(ptr == NULL){
+        return MEMMGR_malloc(
+            _size,
+            _filename,
+            _line
+        );
+    }
 
-	if (ptr==NULL) {
-		// NULL ptr. realloc should act like malloc.
-		return MEMMGR_malloc(_size, _filename, _line);
-	}
+    if(_size == 0){
+        MEMMGR_free(
+            ptr,
+            _filename,
+            _line,
+            DEFAULT_C_ALIGNMENT,
+            MALLOC_ALLOCATOR
+        );
 
-	if(_size == 0){
-	    MEMMGR_free(ptr, _filename, _line, DEFAULT_C_ALIGNMENT, MALLOC_ALLOCATOR);
-	    return NULL;
-	}
+        return NULL;
+    }
 
+    pthread_mutex_lock(&mutex_main);
 
-	PointerPreHeapInfo  *pre_head  =  GET_PREHEADER(ptr,DEFAULT_C_ALIGNMENT);
+    pointer_idx = MEMMGR_find_pointer_index(ptr);
 
+    if(pointer_idx >= 0){
+        pre_head = g_allocated_pointer[pointer_idx];
+    }
 
-	if ((size_t)pre_head->size >= _size) {
-		// We have enough space. Could free some once we implement split.
-		return ptr;
-	}
+    if(pre_head != NULL){
+        old_size = pre_head->size;
+        old_alignment = pre_head->alignment;
 
-	// Need to really realloc. Malloc new space and free old space.
-	// Then copy old data to new space.
-	void * new_ptr=	MEMMGR_malloc_alignment(_size, _filename,_line,DEFAULT_C_ALIGNMENT);
+        if(pre_head->type_allocator != MALLOC_ALLOCATOR){
+            pthread_mutex_unlock(&mutex_main);
 
-	//  memset  pointer
-	memset(new_ptr,MEMMGR_PATTERN_REALLOC_OLD,_size);
-	//new_ptr = MEMMGR_malloc(size, absolute_filename, line);
+            MEMMGR_LOG_ERRORF(
+                _filename,
+                _line,
+                "realloc allocator mismatch. Was allocated with '%s' but expected '%s'",
+                MEMMGR_get_allocator_name(pre_head->type_allocator),
+                MEMMGR_get_allocator_name(MALLOC_ALLOCATOR)
+            );
 
-	if (!new_ptr) {
-		return NULL; // TODO: set errno on failure.
-	}
+            return NULL;
+        }
+    }
 
-	memcpy(new_ptr, ptr, pre_head->size);
-	MEMMGR_free(ptr, _filename, _line,DEFAULT_C_ALIGNMENT,MALLOC_ALLOCATOR);
+    pthread_mutex_unlock(&mutex_main);
 
-	return new_ptr;
+    if(pre_head == NULL){
+        MEMMGR_LOG_ERRORF(
+            _filename,
+            _line,
+            "realloc pointer was not allocated by MEMMGR: %p",
+            ptr
+        );
+
+        return NULL;
+    }
+
+    if(old_size >= _size){
+        return ptr;
+    }
+
+    void *new_ptr = MEMMGR_malloc_alignment(
+        _size,
+        old_alignment,
+        _filename,
+        _line
+    );
+
+    if(new_ptr == NULL){
+        return NULL;
+    }
+
+    new_pre_head = GET_PREHEADER(
+        new_ptr,
+        old_alignment
+    );
+
+    new_pre_head->type_allocator = MALLOC_ALLOCATOR;
+
+    memset(
+        new_ptr,
+        MEMMGR_PATTERN_REALLOC_NEW,
+        _size
+    );
+
+    memcpy(
+        new_ptr,
+        ptr,
+        old_size
+    );
+
+    MEMMGR_free(
+        ptr,
+        _filename,
+        _line,
+        old_alignment,
+        MALLOC_ALLOCATOR
+    );
+
+    return new_ptr;
 }
 //----------------------------------------------------------------------------------------
-void  MEMMGR_free_from_malloc(void  *p,  const  char  *_absolute_filename,  int  _line)
-{
-	char  filename[MEMMGR_MAX_FILENAME_LENGTH+1] = {0};
-	MEMMGR_get_filename(filename,_absolute_filename);
-	PointerPreHeapInfo  *preheap_allocat  =  NULL;
-	PointerPostHeapInfo  *postheap_allocat  =  NULL;
+void MEMMGR_free_from_malloc(
+    void *p,
+    const char *_absolute_filename,
+    int _line
+){
+    char filename[MEMMGR_MAX_FILENAME_LENGTH + 1] = {0};
+    MEMMGR_get_filename(filename, _absolute_filename);
 
+    if(p == NULL){
+        MEMMGR_LOG_WARNING(filename, _line, "NULL pointer to deallocate");
+        return;
+    }
 
-	if(p == NULL)
-	{
-		MEMMGR_LOG_WARNING(filename,  _line,"NULL  pointer  to  deallocate");
-		return;
-	}
-
-	preheap_allocat  =  GET_PREHEADER(p,DEFAULT_C_ALIGNMENT);
-	postheap_allocat  =  GET_POSTHEADER(p,DEFAULT_C_ALIGNMENT);
-
-	//  Check  headers...
-	if(preheap_allocat->pre_crc  !=  postheap_allocat->post_crc)  //  crc  ok  :)
-	{
-		MEMMGR_LOG_ERROR(filename,_line,"Bad  crc  pointer");
-		return;
-	}
-
-	MEMMGR_free(p,  filename,  _line, DEFAULT_C_ALIGNMENT,MALLOC_ALLOCATOR);
+    MEMMGR_free(
+        p,
+        filename,
+        _line,
+        DEFAULT_C_ALIGNMENT,
+        MALLOC_ALLOCATOR
+    );
 }
 //--------------------------------------------------------------------------------------------
-void  MEMMGR_print_status(void)
-{
+void  MEMMGR_print_status(void) {
 	PointerPreHeapInfo    *preheap_allocat;
 	int  i;
 	size_t allocated_bytes=0;
@@ -566,7 +678,12 @@ void  MEMMGR_print_status(void)
 			{
 				allocated_bytes+=preheap_allocat->size;
 				pointers_to_deallocate++;
-				void *pointer=GET_POINTER(preheap_allocat,DEFAULT_C_ALIGNMENT);//((char *)preheap_allocat)+sizeof(PointerPreHeapInfo);
+
+				void *pointer = GET_POINTER(
+					preheap_allocat,
+					preheap_allocat->alignment
+				);
+
 				MEMMGR_LOG_ERRORF(preheap_allocat->filename,  preheap_allocat->line,"Allocated  pointer  NOT  DEALLOCATED (%p)",pointer);
 			}
 		}
@@ -575,8 +692,8 @@ void  MEMMGR_print_status(void)
 	//-----
 	if(pointers_to_deallocate>0  ||  allocated_bytes>0)
 	{
-		MEMMGR_LOG_ERRORF(__FILE__,__LINE__,"Bytes  to  deallocate  =  %i  bytes",allocated_bytes);
-		MEMMGR_LOG_ERRORF(__FILE__,__LINE__,"Mempointers  to  deallocate  =  %i",pointers_to_deallocate);
+		MEMMGR_LOG_ERRORF(__FILE__,__LINE__,"Bytes  to  deallocate  =  %zu  bytes",allocated_bytes);
+		MEMMGR_LOG_ERRORF(__FILE__,__LINE__,"Mempointers  to  deallocate  =  %zu",pointers_to_deallocate);
 	}
 	else
 	{

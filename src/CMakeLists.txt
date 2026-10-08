@@ -89,7 +89,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")  # g++ / gcc
 	LINK_DIRECTORIES(${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})		
 endif()
 
-# Compile memmgr with C++11 but add optional standard compliance.
+# Compile memmgr with C++14 to export sized delete overloads.
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 

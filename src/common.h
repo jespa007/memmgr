@@ -1,11 +1,15 @@
 #ifndef __MEMMGR_COMMON_H__
 #define __MEMMGR_COMMON_H__
 
+#include	<stdbool.h>
+#include	<stdint.h>
+
+
 #define	MAX_MEMPOINTERS					80000
 #define	MEMMGR_MAX_FILENAME_LENGTH		256
 #define MEMMGR_MAX_STACK_FILE_LINE		32
 
-#define SIZEOF_ALIGNED_HEADER(_block_alignment) 		((sizeof(PointerPreHeapInfo)/(_block_alignment)+1)*(_block_alignment))
+#define SIZEOF_ALIGNED_HEADER(_block_alignment)         (((sizeof(PointerPreHeapInfo) + (_block_alignment) - 1) / (_block_alignment)) * (_block_alignment))
 
 #define GET_PREHEADER(p,a)								((PointerPreHeapInfo    *)((uint8_t  *)p-SIZEOF_ALIGNED_HEADER(a)))
 #define GET_POINTER(header_ptr,a)						((void    *)(((uint8_t  *)header_ptr+SIZEOF_ALIGNED_HEADER(a))))
@@ -66,7 +70,7 @@ extern "C" {
 	void 		MEMMGR_enableLog(bool _enable_log);
 	void  		MEMMGR_get_filename(char  *filename, const char *absolute_filename);
 	void  		MEMMGR_log(LogType _log_type, const char *_file, int _line, const  char  *string_text, ...);
-	void 	*	MEMMGR_malloc_alignment(size_t  _size,  const  char  *_absolute_filename,  int  _line, size_t _aligment);
+	void 	*	MEMMGR_malloc_alignment(size_t  _size, size_t _aligment,  const  char  *_absolute_filename,  int  _line);
 	void  		MEMMGR_free(void  *pointer,  const  char  *filename,  int  line, size_t _alignment, int _expected_allocator);
 #ifdef __cplusplus
 }
