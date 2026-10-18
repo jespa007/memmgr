@@ -5,6 +5,7 @@
 #endif
 
 #include <thread>
+#include <stdlib.h>
 
 #ifdef __GNUC__
 #include <sys/stat.h>
