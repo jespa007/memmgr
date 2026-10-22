@@ -19,6 +19,10 @@ void* operator new(size_t _size) _THROW_BAD_ALLOC {
     );
 
     if(pointer == NULL){
+		if(_size == 0){
+			return NULL;
+		}
+
         throw std::bad_alloc();
     }
 
@@ -41,6 +45,11 @@ void* operator new[](size_t _size) _THROW_BAD_ALLOC {
     );
 
     if(pointer == NULL){
+
+		if(_size == 0){
+			return NULL;
+		}
+
         throw std::bad_alloc();
     }
 
@@ -59,6 +68,11 @@ void*  operator  new(size_t  _size, const char *_file, int _line) _THROW_BAD_ALL
 	void *pointer = MEMMGR_malloc_alignment(_size,DEFAULT_CPP_ALIGNMENT,_file,_line);
 
 	if(pointer == NULL){
+
+		if(_size == 0){
+			return NULL;
+		}
+
 		throw std::bad_alloc();
 	}
 
