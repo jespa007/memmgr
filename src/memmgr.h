@@ -6,7 +6,9 @@
 #define MEMMGR_VERSION_PATCH	0
 
 #include	<stdbool.h>
+#include	<memory.h>
 #include	"defs.h"
+
 
 #include "memmgr_api.h"
 
